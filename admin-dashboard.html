@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #1e3a8a, #2563eb, #3b82f6, #93c5fd);
+      background-size: 400% 400%;
+      animation: bgShift 10s ease infinite;
+      font-family: 'Poppins', sans-serif;
+    }
+    @keyframes bgShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .glass:hover {
+      transform: scale(1.02);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen text-white flex flex-col">
+  <!-- 🔹 Navbar -->
+  <nav class="flex justify-between items-center p-5 bg-white/20 backdrop-blur-md shadow-md">
+    <h1 class="text-2xl font-semibold">Admin Dashboard</h1>
+    <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg transition">
+      Logout
+    </button>
+  </nav>
+
+  <!-- 🔹 Main Section -->
+  <main class="flex-1 flex items-center justify-center p-6">
+    <div class="glass rounded-2xl p-6 w-full max-w-5xl">
+      <h2 class="text-xl font-bold mb-4 text-center">Telecaller Details</h2>
+
+      <!-- Telecaller Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-white border-collapse">
+          <thead class="bg-white/30 text-white uppercase">
+            <tr>
+              <th class="px-4 py-3">Name</th>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3">Ordered</th>
+              <th class="px-4 py-3">Remaining</th>
+              <th class="px-4 py-3">Total</th>
+              <th class="px-4 py-3 text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="telecallerTable" class="divide-y divide-white/20"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- 🔹 Add Lead Modal -->
+  <div id="leadModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+    <div class="bg-white rounded-2xl shadow-xl p-6 w-11/12 md:w-1/3 text-gray-800 relative">
+      <h2 class="text-lg font-semibold mb-4 text-center">Add New Lead</h2>
+      <button id="closeModal" class="absolute top-3 right-4 text-gray-500 hover:text-black text-2xl">&times;</button>
+
+      <form id="leadForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Name</label>
+          <input id="leadName" type="text" required class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-400">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Number</label>
+          <input id="leadNumber" type="tel" required class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-400">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Problem</label>
+          <select id="leadProblem" required class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-400">
+            <option value="" disabled selected>Select Problem</option>
+            <option value="Sugar">Sugar</option>
+            <option value="MenWellness">Men Wellness</option>
+          </select>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 text-white rounded-lg py-2 mt-4 hover:bg-blue-700 transition">Add Lead</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 🔹 View Leads Modal -->
+  <div id="viewModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+    <div class="bg-white rounded-2xl shadow-lg p-6 w-11/12 md:w-2/3 text-gray-800 relative max-h-[80vh] overflow-y-auto">
+      <button id="closeViewModal" class="absolute top-3 right-4 text-gray-600 hover:text-black text-2xl">&times;</button>
+      <h2 class="text-lg font-bold mb-4 text-center">Today's Leads</h2>
+      <table class="w-full text-sm text-left border-collapse">
+        <thead class="bg-blue-100">
+          <tr>
+            <th class="px-3 py-2">Name</th>
+            <th class="px-3 py-2">Number</th>
+            <th class="px-3 py-2">Problem</th>
+            <th class="px-3 py-2">Time</th>
+            <th class="px-3 py-2 text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody id="viewLeadsTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 🔹 Transfer Modal -->
+  <div id="transferModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+    <div class="bg-white rounded-2xl shadow-lg p-6 w-11/12 md:w-1/3 text-gray-800 relative">
+      <button id="closeTransferModal" class="absolute top-3 right-4 text-gray-600 hover:text-black text-2xl">&times;</button>
+      <h2 class="text-lg font-bold mb-4 text-center">Transfer Lead</h2>
+      <p id="transferLeadInfo" class="text-center text-sm mb-4"></p>
+      <select id="transferSelect" class="w-full border rounded-lg p-2 mb-4">
+        <option disabled selected>Select Telecaller</option>
+      </select>
+      <button id="confirmTransferBtn" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg">Confirm Transfer</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+  apiKey: "AIzaSyCaFjdwtxT13RdmVau9_6JEFBEIY1xojTY",
+  authDomain: "shreejeeayucare-df742.firebaseapp.com",
+  databaseURL: "https://shreejeeayucare-df742-default-rtdb.firebaseio.com",
+  projectId: "shreejeeayucare-df742",
+  storageBucket: "shreejeeayucare-df742.firebasestorage.app",
+  messagingSenderId: "119318664445",
+  appId: "1:119318664445:web:4399d3ddd4a9decc0f5a94",
+  measurementId: "G-GKWG1RLZ5R"
+};
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const tableBody = document.getElementById("telecallerTable");
+    const modal = document.getElementById("leadModal");
+    const viewModal = document.getElementById("viewModal");
+    const transferModal = document.getElementById("transferModal");
+    const leadForm = document.getElementById("leadForm");
+    const viewLeadsTable = document.getElementById("viewLeadsTable");
+    const closeModal = document.getElementById("closeModal");
+    const closeViewModal = document.getElementById("closeViewModal");
+    const closeTransferModal = document.getElementById("closeTransferModal");
+    const transferSelect = document.getElementById("transferSelect");
+    const transferLeadInfo = document.getElementById("transferLeadInfo");
+    const confirmTransferBtn = document.getElementById("confirmTransferBtn");
+
+    let currentTelecallerId = null;
+    let currentTransferLead = null;
+    let telecallersList = {};
+
+    // ✅ Load Telecallers
+    const teleRef = ref(db, "Telecallers");
+    onValue(teleRef, (snapshot) => {
+      tableBody.innerHTML = "";
+      if (snapshot.exists()) {
+        telecallersList = snapshot.val();
+        Object.keys(telecallersList).forEach((key) => {
+          const tele = telecallersList[key];
+          const statusColor = tele.Status ? "text-green-400" : "text-red-400";
+          const statusText = tele.Status ? "Active 🟢" : "Inactive 🔴";
+
+          let ordered = 0, remaining = 0, total = 0;
+          if (tele.Leads) {
+            Object.values(tele.Leads).forEach((lead) => {
+              total++;
+              if (lead.Status === "Ordered") ordered++;
+              else if (lead.Status === "Not Called") remaining++;
+            });
+          }
+
+          const row = `
+            <tr class="hover:bg-white/10 transition">
+              <td class="px-4 py-3">${tele.Name || "—"}</td>
+              <td class="px-4 py-3 ${statusColor} font-semibold">${statusText}</td>
+              <td class="px-4 py-3">${ordered}</td>
+              <td class="px-4 py-3">${remaining}</td>
+              <td class="px-4 py-3 font-bold">${total}</td>
+              <td class="px-4 py-3 text-center flex gap-2 justify-center">
+                <button class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-sm addLeadBtn" data-id="${key}">
+                  ➕ Add Lead
+                </button>
+                <button class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm viewLeadsBtn" data-id="${key}">
+                  👁 View
+                </button>
+              </td>
+            </tr>`;
+          tableBody.insertAdjacentHTML("beforeend", row);
+        });
+
+        // add listeners
+        document.querySelectorAll(".addLeadBtn").forEach(btn => {
+          btn.addEventListener("click", (e) => {
+            currentTelecallerId = e.target.dataset.id;
+            modal.classList.remove("hidden");
+          });
+        });
+
+        document.querySelectorAll(".viewLeadsBtn").forEach(btn => {
+          btn.addEventListener("click", (e) => {
+            const teleId = e.target.dataset.id;
+            loadTodaysLeads(teleId);
+          });
+        });
+      }
+    });
+
+    // ✅ Load today's leads
+    function loadTodaysLeads(teleId) {
+      currentTelecallerId = teleId;
+      const today = new Date().toLocaleDateString();
+      const leadsRef = ref(db, `Telecallers/${teleId}/Leads`);
+      onValue(leadsRef, (snap) => {
+        viewLeadsTable.innerHTML = "";
+        if (snap.exists()) {
+          const leads = snap.val();
+          Object.entries(leads).forEach(([number, info]) => {
+            if (info.Time && info.Time.includes(today)) {
+              viewLeadsTable.insertAdjacentHTML("beforeend", `
+                <tr class="border-b">
+                  <td class="px-3 py-2">${info.Name}</td>
+                  <td class="px-3 py-2">${number}</td>
+                  <td class="px-3 py-2">${info.Problem}</td>
+                  <td class="px-3 py-2">${info.Time}</td>
+                  <td class="px-3 py-2 text-center">
+                    <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md text-xs transferBtn" data-number="${number}">Transfer</button>
+                  </td>
+                </tr>
+              `);
+            }
+          });
+
+          document.querySelectorAll(".transferBtn").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+              const number = e.target.dataset.number;
+              const leadRef = ref(db, `Telecallers/${teleId}/Leads/${number}`);
+              const leadSnap = await get(leadRef);
+              if (leadSnap.exists()) {
+                currentTransferLead = { number, data: leadSnap.val() };
+                openTransferModal();
+              }
+            });
+          });
+        } else {
+          viewLeadsTable.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">No leads today</td></tr>`;
+        }
+        viewModal.classList.remove("hidden");
+      });
+    }
+
+    // ✅ Open Transfer Modal
+    function openTransferModal() {
+      transferSelect.innerHTML = `<option disabled selected>Select Telecaller</option>`;
+      Object.keys(telecallersList).forEach(id => {
+        const tele = telecallersList[id];
+        if (tele.Status === true && id !== currentTelecallerId) {
+          transferSelect.insertAdjacentHTML("beforeend", `<option value="${id}">${telecallersList[id].Name}</option>`);
+        }
+      });
+      transferLeadInfo.textContent = `Transfer lead: ${currentTransferLead.data.Name} (${currentTransferLead.number})`;
+      transferModal.classList.remove("hidden");
+    }
+
+    // ✅ Confirm Transfer
+    confirmTransferBtn.addEventListener("click", async () => {
+      const selectedTeleId = transferSelect.value;
+      if (!selectedTeleId || !currentTransferLead) {
+        alert("Please select a telecaller.");
+        return;
+      }
+
+      const targetRef = ref(db, `Telecallers/${selectedTeleId}/Leads/${currentTransferLead.number}`);
+      const sourceRef = ref(db, `Telecallers/${currentTelecallerId}/Leads/${currentTransferLead.number}`);
+
+      await set(targetRef, currentTransferLead.data);
+      await remove(sourceRef);
+
+      alert("✅ Lead transferred successfully!");
+      transferModal.classList.add("hidden");
+    });
+
+    // ✅ Close modals
+    [closeModal, closeViewModal, closeTransferModal].forEach(btn => btn.addEventListener("click", () => {
+      modal.classList.add("hidden");
+      viewModal.classList.add("hidden");
+      transferModal.classList.add("hidden");
+    }));
+
+    window.addEventListener("click", (e) => {
+      if (e.target === modal) modal.classList.add("hidden");
+      if (e.target === viewModal) viewModal.classList.add("hidden");
+      if (e.target === transferModal) transferModal.classList.add("hidden");
+    });
+
+    // ✅ Add Lead
+   leadForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const name = document.getElementById("leadName").value.trim();
+  const number = document.getElementById("leadNumber").value.trim();
+  const problem = document.getElementById("leadProblem").value;
+  const time = new Date().toLocaleString();
+
+  // ✅ Get last 5 cached leads (from localStorage)
+  let recentLeads = JSON.parse(localStorage.getItem("recentLeads")) || [];
+
+  // ✅ Check if this number was added recently
+  const isDuplicate = recentLeads.some((lead) => lead.number === number);
+
+  if (isDuplicate) {
+    alert("⚠️ This lead was recently added! Please avoid duplicates.");
+    return;
+  }
+
+  // ✅ Save to Firebase
+  const leadRef = ref(db, `Telecallers/${currentTelecallerId}/Leads/${number}`);
+  await set(leadRef, {
+    Name: name,
+    Problem: problem,
+    Status: "Not Called",
+    Remark: "",
+    Time: time
+  });
+
+  // ✅ Add to cache (max 5 leads)
+  recentLeads.unshift({ name, number, time });
+  if (recentLeads.length > 5) recentLeads.pop();
+  localStorage.setItem("recentLeads", JSON.stringify(recentLeads));
+
+  // ✅ Success alert
+  alert("✅ Lead added successfully!");
+  leadForm.reset();
+  modal.classList.add("hidden");
+});
+
+
+    // ✅ Logout
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("currentTelecaller");
+      window.location.href = "index.html";
+    });
+  </script>
+</body>
+</html>
