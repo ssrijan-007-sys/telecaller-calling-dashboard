@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Telecaller Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
   <style>
     body {
-      background: linear-gradient(135deg, #1e3a8a, #2563eb, #3b82f6, #93c5fd);
-      background-size: 400% 400%;
+      background: linear-gradient(135deg, #2563eb, #1e3a8a, #3b82f6);
+      background-size: 300% 300%;
       animation: bgShift 10s ease infinite;
-      font-family: 'Poppins', sans-serif;
+      font-family: "Poppins", sans-serif;
     }
     @keyframes bgShift {
       0% { background-position: 0% 50%; }
@@ -19,145 +18,93 @@
       100% { background-position: 0% 50%; }
     }
     .glass {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .glass:hover {
-      transform: scale(1.02);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     }
-
-    /* Popup animation */
-    #followupPopup {
-      animation: fadeIn 0.4s ease;
+    select {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.9); }
-      to { opacity: 1; transform: scale(1); }
-    }
+    option { color: black; }
   </style>
 </head>
 
-<body class="min-h-screen text-white flex flex-col">
-  <!-- 🔹 Top Bar -->
-  <header class="flex justify-between items-center p-5 bg-white/20 backdrop-blur-md shadow-md">
-    <h1 id="welcomeName" class="text-2xl font-semibold">Welcome</h1>
-    <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg transition">
-      Logout
-    </button>
-  </header>
-
-  <!-- 🔹 Main Section -->
-  <main class="flex-1 p-6 space-y-8 overflow-y-auto">
-    <!-- Leads Card -->
-<div class="glass rounded-2xl p-6">
-  <div class="flex justify-between items-center mb-4">
-    <!-- Left: Search -->
-    <div>
-      <input id="searchInput" type="text" placeholder="Search by Number..."
-        class="bg-white/20 text-white placeholder-white/70 px-3 py-2 rounded-lg focus:outline-none border border-white/30 w-60">
+<body class="min-h-screen flex flex-col text-white">
+  <!-- Navbar -->
+  <nav class="flex justify-between items-center p-5 bg-white/10">
+    <h1 id="welcomeText" class="text-xl font-semibold">Welcome</h1>
+    <div class="flex items-center gap-3">
+      <button id="followupBtn" class="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded-md text-sm font-medium">
+        Followups
+      </button>
+      <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-md text-sm font-medium">
+        Logout
+      </button>
     </div>
+  </nav>
 
-    <!-- Center: Title -->
-    <h2 class="text-xl font-bold text-center flex-1">Leads</h2>
-
-    <!-- Right: Filter -->
-    <div>
-      <select id="filterSelect"
-        class="bg-black/50 text-white px-3 py-2 rounded-lg border border-white/30 focus:outline-none">
-        <option value="total">Total</option>
-        <option value="remaining">Remaining</option>
-        <option value="today">Today</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="overflow-x-auto max-h-80 overflow-y-auto">
-    <table class="w-full text-sm text-left text-white border-collapse">
-      <thead class="bg-white/30 text-white uppercase">
-        <tr>
-          <th class="px-4 py-3">Number</th>
-          <th class="px-4 py-3">Name</th>
-          <th class="px-4 py-3">Problem</th>
-          <th class="px-4 py-3">Date</th>
-          <th class="px-4 py-3">Time</th>
-          <th class="px-4 py-3">Status</th>
-          <th class="px-4 py-3">Remark</th>
-          <th class="px-4 py-3 text-right">Action</th>
-        </tr>
-      </thead>
-      <tbody id="leadsTable" class="divide-y divide-white/20"></tbody>
-    </table>
-  </div>
-</div>
-
-    <!-- ✅ Followups Card (Modified with contrast background) -->
-    <div class="rounded-2xl p-6" style="background: rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.2)">
-      <h2 class="text-xl font-bold mb-4 text-center">Followups</h2>
-      <div class="overflow-x-auto max-h-80 overflow-y-auto">
-        <table class="w-full text-sm text-left text-white border-collapse">
-          <thead class="bg-white/20 text-white uppercase">
-            <tr>
-              <th class="px-4 py-3">Number</th>
-              <th class="px-4 py-3">Name</th>
-              <th class="px-4 py-3">Follow-Up Date</th>
-              <th class="px-4 py-3">Follow-Up Time</th>
-              <th class="px-4 py-3 text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody id="followupTableBody" class="divide-y divide-white/20"></tbody>
-        </table>
+  <!-- Main Content -->
+  <main class="flex-1 p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-2xl font-bold">Leads</h2>
+      <div class="flex gap-3 items-center">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search by name or number..."
+          class="px-3 py-2 rounded-md text-black w-60"
+        />
+        <select id="filterSelect" class="px-3 py-2 rounded-md text-black">
+          <option value="today" selected>Today</option>
+          <option value="total">Total</option>
+          <option value="notPicked">Not Picked</option>
+          <option value="remaining">Not Called / Remaining</option>
+          <option value="custom">Custom Date Range</option>
+        </select>
       </div>
+    </div>
+
+    <div id="leadsContainer" class="flex flex-col gap-6 overflow-y-auto max-h-[80vh] p-2">
+      <!-- Leads grouped by date will appear here -->
     </div>
   </main>
 
-  <!-- 🔹 Follow-Up Modal -->
-  <div id="followupModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-    <div class="bg-white text-black rounded-2xl p-6 w-11/12 md:w-1/3 shadow-lg relative">
-      <button id="closeModal" class="absolute top-3 right-4 text-gray-600 text-2xl hover:text-black">&times;</button>
-      <h2 class="text-xl font-bold mb-4 text-center">Add Follow-Up</h2>
-      <p id="leadInfo" class="text-center text-gray-700 mb-4"></p>
-
-      <div class="space-y-3">
-        <div>
-          <label class="block text-sm font-medium mb-1">Follow-Up Date</label>
-          <input type="date" id="followupDate" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300">
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Follow-Up Time</label>
-          <input type="time" id="followupTime" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-blue-300">
-        </div>
-      </div>
-
-      <div class="mt-6 text-center">
-        <button id="saveFollowupBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg transition">
-          Save Follow-Up
-        </button>
+  <!-- Date Range Modal -->
+  <div id="dateRangeModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-white text-black rounded-lg p-6 w-80 relative">
+      <h3 class="text-lg font-semibold mb-4">Select Date Range</h3>
+      <label class="block mb-2 text-sm font-medium">From:</label>
+      <input type="date" id="fromDate" class="border rounded w-full p-2 mb-3" />
+      <label class="block mb-2 text-sm font-medium">To:</label>
+      <input type="date" id="toDate" class="border rounded w-full p-2 mb-4" />
+      <div class="flex justify-end gap-3">
+        <button id="cancelDateRange" class="bg-gray-300 px-4 py-2 rounded">Cancel</button>
+        <button id="applyDateRange" class="bg-blue-500 text-white px-4 py-2 rounded">Apply</button>
       </div>
     </div>
   </div>
 
-  <!-- ✅ Popup Reminder -->
-  <div id="followupPopup" class="fixed inset-0 hidden items-center justify-center bg-black/50 z-50">
-    <div class="bg-white text-black rounded-xl p-6 w-80 text-center relative shadow-xl">
-      <button id="closePopup" class="absolute top-2 right-3 text-gray-600 hover:text-black text-xl">&times;</button>
-      <h3 class="text-xl font-semibold text-yellow-600">Don't Miss Your Follow-Up!</h3>
-      <p class="mt-2 text-gray-700">It’s time to call your lead!</p>
+  <!-- Remarks Modal -->
+  <div id="remarksModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-white text-black rounded-lg w-96 max-h-[70vh] overflow-y-auto p-5 relative">
+      <button id="closeRemarks" class="absolute top-2 right-3 text-xl text-gray-500 hover:text-black">&times;</button>
+      <h3 id="remarksTitle" class="text-lg font-bold mb-3">Remarks</h3>
+      <ul id="remarksList" class="space-y-2"></ul>
     </div>
   </div>
-
-  <!-- ✅ Ping sound -->
-  <audio id="pingSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getDatabase, ref, update, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, onValue, update, push, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-  // ✅ Your Firebase Config here
-  const firebaseConfig = {
+    // 🔥 Firebase Config
+    const firebaseConfig = {
   apiKey: "AIzaSyCaFjdwtxT13RdmVau9_6JEFBEIY1xojTY",
   authDomain: "shreejeeayucare-df742.firebaseapp.com",
   databaseURL: "https://shreejeeayucare-df742-default-rtdb.firebaseio.com",
@@ -167,270 +114,500 @@
   appId: "1:119318664445:web:4399d3ddd4a9decc0f5a94",
   measurementId: "G-GKWG1RLZ5R"
 };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+    const currentTelecaller = JSON.parse(localStorage.getItem("currentTelecaller"));
+    if (!currentTelecaller || !currentTelecaller.email) window.location.href = "index.html";
 
+    const telecallerEmailKey = currentTelecaller.email.replace(/\./g, "_");
+    const welcomeText = document.getElementById("welcomeText");
+    const leadsContainer = document.getElementById("leadsContainer");
+    const searchInput = document.getElementById("searchInput");
+    const filterSelect = document.getElementById("filterSelect");
 
-  const telecallerData = JSON.parse(localStorage.getItem("currentTelecaller"));
-  const welcomeName = document.getElementById("welcomeName");
-  if (telecallerData?.name) {
-    welcomeName.textContent = `Welcome ${telecallerData.name}`;
-  }
+    
 
-  // ✅ Mark logged-in status true
-  if (telecallerData?.email) {
-    const safeEmail = telecallerData.email.replace(/\./g, "_");
-    const teleRef = ref(db, `Telecallers/${safeEmail}`);
-    update(teleRef, { Name: telecallerData.name, Status: true });
+    welcomeText.textContent = `Welcome, ${currentTelecaller.name || "Telecaller"}`;
 
-    // ✅ Fetch and display Leads
-    const leadsRef = ref(db, `Telecallers/${safeEmail}/Leads`);
-    const leadsTable = document.getElementById("leadsTable");
+    let allLeads = {};
+    let dateFilter = "today";
+    let customRange = null;
 
-    onValue(leadsRef, (snapshot) => {
-      let allLeads = [];
-      leadsTable.innerHTML = "";
+    const telecallerRef = ref(db, `Telecallers/${telecallerEmailKey}/Leads`);
 
-      if (snapshot.exists()) {
-        const leads = snapshot.val();
-        Object.keys(leads).forEach((number) => {
-          const lead = leads[number];
-          allLeads.push({ number, ...lead });
-        });
+    onValue(telecallerRef, (snapshot) => {
+      allLeads = snapshot.exists() ? snapshot.val() : {};
+      renderLeads();
+    });
 
-        renderLeads(allLeads); // initial render
-
-        // ✅ Search function
-        document.getElementById("searchInput").addEventListener("input", (e) => {
-          const searchValue = e.target.value.toLowerCase();
-          const filtered = allLeads.filter(l => l.number.toLowerCase().includes(searchValue));
-          renderLeads(filtered);
-        });
-
-        // ✅ Filter dropdown
-        document.getElementById("filterSelect").addEventListener("change", (e) => {
-          const filter = e.target.value;
-          let filtered = [];
-
-          if (filter === "total") filtered = allLeads;
-          else if (filter === "remaining") filtered = allLeads.filter(l => (l.Status || "Not Called") === "Not Called");
-          else if (filter === "today") {
-            const today = new Date().toLocaleDateString();
-            filtered = allLeads.filter(l => l.Time?.includes(today));
-          }
-
-          renderLeads(filtered);
-        });
-
+    // ✅ Filtering and Searching
+    filterSelect.addEventListener("change", (e) => {
+      dateFilter = e.target.value;
+      if (dateFilter === "custom") {
+        document.getElementById("dateRangeModal").classList.remove("hidden");
       } else {
-        leadsTable.innerHTML = `<tr><td colspan="8" class="text-center py-3 text-white/80">No leads found</td></tr>`;
+        renderLeads();
       }
-  // 🕒 Auto Logout After 10 Minutes of No Firebase Change
-let firebaseLastChangeTime = Date.now();
-let logoutTimer;
+    });
 
-// Reset the timer when Firebase data updates
-function resetFirebaseTimer() {
-  firebaseLastChangeTime = Date.now();
-  if (logoutTimer) clearTimeout(logoutTimer);
-  logoutTimer = setTimeout(() => {
-    autoLogout();
-  }, 10 * 60 * 1000); // 10 minutes = 600,000 ms
+    document.getElementById("cancelDateRange").addEventListener("click", () => {
+      document.getElementById("dateRangeModal").classList.add("hidden");
+      filterSelect.value = "today";
+      dateFilter = "today";
+      renderLeads();
+    });
+
+    document.getElementById("applyDateRange").addEventListener("click", () => {
+      const from = document.getElementById("fromDate").value;
+      const to = document.getElementById("toDate").value;
+      if (from && to) {
+        customRange = { from: new Date(from), to: new Date(to) };
+        document.getElementById("dateRangeModal").classList.add("hidden");
+        renderLeads();
+      }
+    });
+
+    searchInput.addEventListener("input", () => renderLeads());
+
+    // ✅ Render leads with filters
+    function renderLeads() {
+      leadsContainer.innerHTML = "";
+      let leadsArray = Object.entries(allLeads).map(([number, data]) => ({ number, ...data }));
+
+      // Apply search filter
+      const searchVal = searchInput.value.toLowerCase();
+      if (searchVal) {
+        leadsArray = leadsArray.filter(l =>
+          (l.Name || "").toLowerCase().includes(searchVal) ||
+          l.number.includes(searchVal)
+        );
+      }
+
+      // Apply date filter
+const now = new Date();
+if (dateFilter === "today") {
+  leadsArray = leadsArray.filter(l => {
+    const d = new Date(l.Time);
+    return d.toDateString() === now.toDateString();
+  });
+} else if (dateFilter === "notPicked") {
+  leadsArray = leadsArray.filter(l => l.Status === "Not Picked");
+} else if (dateFilter === "remaining") {
+  leadsArray = leadsArray.filter(l => l.Status === "Not Called");
+} else if (dateFilter === "custom" && customRange) {
+  leadsArray = leadsArray.filter(l => {
+    const d = new Date(l.Time);
+    // ✅ Include from and to dates (make them inclusive)
+    const fromDate = new Date(customRange.from.setHours(0, 0, 0, 0));
+    const toDate = new Date(customRange.to.setHours(23, 59, 59, 999));
+    return d >= fromDate && d <= toDate;
+  });
 }
 
-// Call this when user needs to logout
-function autoLogout() {
-  alert("Session expired due to inactivity. You are being logged out.");
-  if (telecallerData?.email) {
-    const safeEmail = telecallerData.email.replace(/\./g, "_");
-    update(ref(db, `Telecallers/${safeEmail}`), { Status: false });
+
+      // Group by date
+      const groupedByDate = {};
+      leadsArray.forEach(lead => {
+        if (!lead.Time) return;
+        const datePart = new Date(lead.Time).toDateString();
+        if (!groupedByDate[datePart]) groupedByDate[datePart] = [];
+        groupedByDate[datePart].push(lead);
+      });
+
+      const sortedDates = Object.keys(groupedByDate).sort((a, b) => new Date(b) - new Date(a));
+
+      if (sortedDates.length === 0) {
+        leadsContainer.innerHTML = `<p class="text-center text-white/70 mt-10">No Leads Found</p>`;
+        return;
+      }
+
+      sortedDates.forEach(dateKey => {
+        const section = document.createElement("div");
+        section.innerHTML = `<h3 class="text-lg font-semibold mb-3 border-b border-white/20 pb-1">${new Date(dateKey).toDateString()}</h3>`;
+        groupedByDate[dateKey]
+          .sort((a, b) => new Date(b.Time) - new Date(a.Time))
+          .forEach(lead => {
+            const card = document.createElement("div");
+            card.className = "glass p-4 rounded-lg shadow-md mb-3";
+            const currentStatus = lead.Status || "Not Called";
+            card.innerHTML = `
+              <div class="flex justify-between items-center mb-2">
+                <div class="flex items-center gap-2">
+                  <h4 class="text-lg font-semibold">${lead.Name || "Unknown"}</h4>
+                  <button class="text-yellow-400 hover:text-yellow-300 text-sm font-semibold" data-edit="${lead.number}">✏️</button>
+                </div>
+                <select data-status="${lead.number}" class="rounded-md text-sm px-2 py-1">
+                  <option ${currentStatus === "Not Interested" ? "selected" : ""}>Not Interested</option>
+                  <option ${currentStatus === "Picked" ? "selected" : ""}>Picked</option>
+                  <option ${currentStatus === "Not Picked" ? "selected" : ""}>Not Picked</option>
+                  <option ${currentStatus === "Ordered" ? "selected" : ""}>Ordered</option>
+                </select>
+              </div>
+              <p><strong>Number:</strong> ${lead.number}</p>
+              <p><strong>Problem:</strong> ${lead.Problem || "—"}</p>
+              <p><strong>Time:</strong> ${new Date(lead.Time).toLocaleTimeString()}</p>
+              <input type="text" placeholder="Add a remark..." data-remark="${lead.number}" class="w-full mt-2 bg-white/10 border border-white/30 rounded px-3 py-2 text-white placeholder-white/70 focus:outline-none focus:ring-1 focus:ring-blue-400" />
+              <div class="flex justify-end mt-2">
+                <button data-view="${lead.number}" class="bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded text-sm">View</button>
+                <button class="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-md followupBtn" 
+          data-number="${lead.number}" 
+          data-name="${lead.Name || ''}">
+    Follow-up
+  </button>
+                </div>
+
+            `;
+
+            // ✅ Event handlers
+            card.querySelector(`[data-status="${lead.number}"]`).addEventListener("change", e => {
+              update(ref(db, `Telecallers/${telecallerEmailKey}/Leads/${lead.number}`), { Status: e.target.value });
+            });
+            card.querySelector(`[data-edit="${lead.number}"]`).addEventListener("click", () => {
+              const newName = prompt("Edit Lead Name:", lead.Name || "");
+              if (newName) update(ref(db, `Telecallers/${telecallerEmailKey}/Leads/${lead.number}`), { Name: newName });
+            });
+            card.querySelector(`[data-remark="${lead.number}"]`).addEventListener("keypress", e => {
+              if (e.key === "Enter" && e.target.value.trim()) {
+                const remarkText = e.target.value.trim();
+                const remarkRef = ref(db, `Telecallers/${telecallerEmailKey}/Leads/${lead.number}/Remarks`);
+                set(push(remarkRef), { text: remarkText, time: new Date().toISOString() });
+                e.target.value = "";
+              }
+            });
+            card.querySelector(`[data-view="${lead.number}"]`).addEventListener("click", () => openRemarksModal(lead.number, lead.Name));
+            section.appendChild(card);
+          });
+        leadsContainer.appendChild(section);
+      });
+    }
+
+    // ✅ Remarks Modal Logic
+    const remarksModal = document.getElementById("remarksModal");
+    const remarksList = document.getElementById("remarksList");
+    const remarksTitle = document.getElementById("remarksTitle");
+    document.getElementById("closeRemarks").addEventListener("click", () => remarksModal.classList.add("hidden"));
+
+    function openRemarksModal(number, name) {
+      remarksList.innerHTML = "";
+      remarksTitle.textContent = `Remarks for ${name} (${number})`;
+      remarksModal.classList.remove("hidden");
+      const remarksRef = ref(db, `Telecallers/${telecallerEmailKey}/Leads/${number}/Remarks`);
+      onValue(remarksRef, snapshot => {
+        remarksList.innerHTML = snapshot.exists()
+          ? Object.values(snapshot.val())
+              .sort((a, b) => new Date(b.time) - new Date(a.time))
+              .map(r => `<li class="bg-gray-100 p-2 rounded mb-2"><p>${r.text}</p><p class="text-xs text-gray-500">${new Date(r.time).toLocaleString()}</p></li>`)
+              .join("")
+          : `<li class="text-gray-500 text-center">No remarks yet.</li>`;
+      });
+    }
+
+    // ✅ Logout + Followups
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      update(ref(db, `Telecallers/${telecallerEmailKey}`), { Status: false });
+      localStorage.removeItem("currentTelecaller");
+      window.location.href = "index.html";
+    });
+    document.getElementById("followupBtn").addEventListener("click", () => {
+      window.location.href = "followups.html";
+    });
+
+   // =============== FOLLOW-UP MODAL HANDLING ===============
+
+const followupModal = document.getElementById("followupModal");
+const followupNumberEl = document.getElementById("followupNumber");
+const followupNameEl = document.getElementById("followupName");
+const followupDateEl = document.getElementById("followupDate");
+const followupTimeEl = document.getElementById("followupTime");
+
+let selectedFollowup = null;
+
+// Open follow-up modal
+document.addEventListener("click", (e) => {
+  if (e.target.classList.contains("followupBtn")) {
+    selectedFollowup = {
+      number: e.target.dataset.number,
+      name: e.target.dataset.name
+    };
+    followupNumberEl.textContent = selectedFollowup.number;
+    followupNameEl.textContent = selectedFollowup.name || "—";
+    followupDateEl.value = "";
+    followupTimeEl.value = "";
+    followupModal.classList.remove("hidden");
   }
-  localStorage.removeItem("currentTelecaller");
-  window.location.href = "index.html";
-}
-
-// Monitor Firebase data changes to reset timer
-onValue(ref(db, `Telecallers/${safeEmail}/Leads`), () => {
-  resetFirebaseTimer();
-});
-onValue(ref(db, `Telecallers/${safeEmail}/Followups`), () => {
-  resetFirebaseTimer();
 });
 
-// Start timer initially
-resetFirebaseTimer();
+// Cancel button
+document.getElementById("cancelFollowup").addEventListener("click", () => {
+  followupModal.classList.add("hidden");
+  selectedFollowup = null;
+});
 
-      // ✅ Function to render table rows dynamically
-      function renderLeads(leadsArray) {
-        leadsTable.innerHTML = "";
-        if (leadsArray.length === 0) {
-          leadsTable.innerHTML = `<tr><td colspan="8" class="text-center py-3 text-white/80">No leads match your filter</td></tr>`;
+// Save follow-up
+document.getElementById("saveFollowup").addEventListener("click", async () => {
+  if (!selectedFollowup) return;
+  const followupDate = followupDateEl.value;
+  const followupTime = followupTimeEl.value;
+
+  if (!followupDate || !followupTime) {
+    alert("⚠️ Please select both date and time!");
+    return;
+  }
+
+  const safeEmail = currentTelecaller.email.replace(/\./g, "_");
+  const followupRef = ref(db, `Telecallers/${safeEmail}/Followups/${selectedFollowup.number}`);
+
+  await set(followupRef, {
+    Name: selectedFollowup.name || "—",
+    "Follow-Up Date": followupDate,
+    "Follow-Up Time": followupTime
+  });
+
+  alert("✅ Follow-up saved successfully!");
+  followupModal.classList.add("hidden");
+});
+
+// ===============================
+// ✅ Follow-up Notification Logic (with Debug Logs)
+// ===============================
+function checkDueFollowups() {
+  console.log("⏱️ Checking for due followups...");
+  const followupsRef = ref(db, `Telecallers/${telecallerEmailKey}/Followups`);
+  
+  onValue(followupsRef, (snapshot) => {
+    let dueCount = 0;
+
+    if (snapshot.exists()) {
+      const followups = snapshot.val();
+      const now = new Date();
+      console.log("📦 Found followups:", followups);
+
+      Object.entries(followups).forEach(([number, data]) => {
+        const dateStr = data["Follow-Up Date"];
+        const timeStr = data["Follow-Up Time"];
+        const name = data["Name"];
+
+        if (!dateStr || !timeStr) {
+          console.log(`⚠️ Skipping ${number} - missing date/time`);
           return;
         }
 
-        leadsArray.forEach((leadObj) => {
-          const { number, Name, Problem, Time, Status, Remark } = leadObj;
-          const dateTime = Time ? Time.split(", ") : ["—", "—"];
-          const row = document.createElement("tr");
-          row.classList.add("hover:bg-white/10", "transition");
+        // Convert strings to a Date object
+        const [year, month, day] = dateStr.split("-").map(Number);
+        const [hour, minute] = timeStr.split(":").map(Number);
+        const followupDateTime = new Date(year, month - 1, day, hour, minute);
 
-          row.innerHTML = `
-            <td class="px-4 py-3">${number}</td>
-            <td class="px-4 py-3">${Name || "—"}</td>
-            <td class="px-4 py-3">${Problem || "—"}</td>
-            <td class="px-4 py-3">${dateTime[0]}</td>
-            <td class="px-4 py-3">${dateTime[1] || "—"}</td>
-            <td class="px-4 py-3">
-              <select class="bg-black/50 border rounded px-2 py-1 focus:outline-none">
-                <option ${Status === "Not Called" ? "selected" : ""}>Not Called</option>
-                <option ${Status === "Picked" ? "selected" : ""}>Picked</option>
-                <option ${Status === "Not Picked" ? "selected" : ""}>Not Picked</option>
-                <option ${Status === "Not Interested" ? "selected" : ""}>Not Interested</option>
-                <option ${Status === "Ordered" ? "selected" : ""}>Ordered</option>
-              </select>
-            </td>
-            <td class="px-4 py-3">
-              <input type="text" value="${Remark || ""}" class="bg-black/50 border rounded px-2 py-1 w-full text-white focus:outline-none" placeholder="Add remark..." />
-            </td>
-            <td class="px-4 py-3 text-right">
-              <button class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium px-3 py-1 rounded-lg transition">
-                Add Follow-Up
-              </button>
-            </td>
-          `;
+        const diff = now - followupDateTime;
+        console.log(`📅 Lead: ${name} (${number}) | Follow-up: ${followupDateTime.toLocaleString()} | Diff(ms): ${diff}`);
 
-          const statusSelect = row.querySelector("select");
-          statusSelect.addEventListener("change", () => {
-            update(ref(db, `Telecallers/${safeEmail}/Leads/${number}`), { Status: statusSelect.value });
-          });
-
-          const remarkInput = row.querySelector("input");
-          remarkInput.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
-              update(ref(db, `Telecallers/${safeEmail}/Leads/${number}`), { Remark: remarkInput.value });
-            }
-          });
-
-          const followBtn = row.querySelector("button");
-          followBtn.addEventListener("click", () => openFollowupModal(number, leadObj));
-
-          leadsTable.appendChild(row);
-        });
-      }
-    });
-
-    // ✅ Retrieve Followups
-    const followupTable = document.getElementById("followupTableBody");
-    const popup = document.getElementById("followupPopup");
-    const ping = document.getElementById("pingSound");
-    const closePopup = document.getElementById("closePopup");
-    const followupRef = ref(db, `Telecallers/${safeEmail}/Followups`);
-
-    onValue(followupRef, (snapshot) => {
-      followupTable.innerHTML = "";
-      const allFollowups = [];
-      snapshot.forEach(child => {
-        allFollowups.push({ number: child.key, ...child.val() });
+        // If followup is due now or overdue, count it
+        if (diff >= 0) {
+          dueCount++;
+          console.log(`🚨 Followup due now for ${name} (${number})`);
+          // Still show popup only once per day per (date+time)
+          showFollowupPopup(number, name, dateStr, timeStr);
+        }
       });
-
-      // Sort latest first
-      allFollowups.sort((a,b) => new Date(`${b["Follow-Up Date"]} ${b["Follow-Up Time"]}`) - new Date(`${a["Follow-Up Date"]} ${a["Follow-Up Time"]}`));
-
-      allFollowups.forEach(f => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td class="px-4 py-3">${f.number}</td>
-          <td class="px-4 py-3">${f.Name || "—"}</td>
-          <td class="px-4 py-3">${f["Follow-Up Date"]}</td>
-          <td class="px-4 py-3">${f["Follow-Up Time"]}</td>
-          <td class="px-4 py-3 text-right">
-            <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg"
-              onclick="removeFollowup('${f.number}')">Remove</button>
-          </td>`;
-        followupTable.appendChild(row);
-      });
-    });
-
-    window.removeFollowup = (number) => {
-      const confirmDel = confirm("Remove this follow-up?");
-      if (!confirmDel) return;
-      remove(ref(db, `Telecallers/${safeEmail}/Followups/${number}`));
-    };
-
-    // ✅ Real-time popup alert
-    setInterval(() => {
-      const now = new Date();
-      onValue(followupRef, (snap) => {
-        snap.forEach(child => {
-          const f = child.val();
-          const target = new Date(`${f["Follow-Up Date"]} ${f["Follow-Up Time"]}`);
-          const diff = Math.abs(now - target);
-          if (diff < 30000) { // within 30 sec
-            ping.play();
-            popup.classList.remove("hidden");
-            popup.classList.add("flex");
-          }
-        });
-      }, { onlyOnce: true });
-    }, 10000);
-
-    closePopup.addEventListener("click", ()=> popup.classList.add("hidden"));
-  }
-
-  // ✅ Logout
-  document.getElementById("logoutBtn").addEventListener("click", () => {
-    if (telecallerData?.email) {
-      const safeEmail = telecallerData.email.replace(/\./g, "_");
-      update(ref(db, `Telecallers/${safeEmail}`), { Status: false });
-    }
-    localStorage.removeItem("currentTelecaller");
-    window.location.href = "index.html";
-  });
-
-  // 🔹 Follow-up Modal Logic
-  const followupModal = document.getElementById("followupModal");
-  const closeModal = document.getElementById("closeModal");
-  const leadInfo = document.getElementById("leadInfo");
-  const saveFollowupBtn = document.getElementById("saveFollowupBtn");
-
-  let currentLead = null;
-
-  function openFollowupModal(number, lead) {
-    currentLead = { number, ...lead };
-    leadInfo.textContent = `${lead.Name} (${number})`;
-    followupModal.classList.remove("hidden");
-    followupModal.classList.add("flex");
-  }
-
-  closeModal.addEventListener("click", () => {
-    followupModal.classList.add("hidden");
-  });
-
-  saveFollowupBtn.addEventListener("click", () => {
-    if (!currentLead || !telecallerData?.email) return;
-
-    const date = document.getElementById("followupDate").value;
-    const time = document.getElementById("followupTime").value;
-
-    if (!date || !time) {
-      alert("Please select both date and time.");
-      return;
+    } else {
+      console.log("❌ No followups found in Firebase.");
     }
 
-    const safeEmail = telecallerData.email.replace(/\./g, "_");
-    const followupRef = ref(db, `Telecallers/${safeEmail}/Followups/${currentLead.number}`);
+    // ✅ Update or create badge (always shows current due count)
+    let badge = document.getElementById("followupBadge");
+    if (!badge) {
+      const followupBtn = document.getElementById("followupBtn");
+      badge = document.createElement("span");
+      badge.id = "followupBadge";
+      badge.className =
+        "absolute top-1 right-1 bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full hidden";
+      followupBtn.classList.add("relative");
+      followupBtn.appendChild(badge);
+      console.log("🆕 Created followup badge element");
+    }
 
-    update(followupRef, {
-      Name: currentLead.Name,
-      "Follow-Up Date": date,
-      "Follow-Up Time": time,
-    }).then(() => {
-      alert("Follow-Up saved successfully!");
-      followupModal.classList.add("hidden");
-    });
+    badge.textContent = dueCount;
+    badge.classList.toggle("hidden", dueCount === 0);
+    console.log(`🔴 Badge updated — Due Count: ${dueCount}`);
   });
-</script>
+}
+
+// ==================== FOLLOW-UP POPUP CONTROL ====================
+
+// 🧠 Track shown popups (number + date + time)
+function hasPopupShownToday(number, followDate, followTime) {
+  const today = new Date().toDateString();
+  const key = `${number}_${followDate}_${followTime}`;
+  const shownData = JSON.parse(localStorage.getItem("shownFollowups") || "{}");
+
+  // Clean outdated entries
+  for (const id in shownData) {
+    if (shownData[id].date !== today) {
+      delete shownData[id];
+    }
+  }
+
+  localStorage.setItem("shownFollowups", JSON.stringify(shownData));
+  return shownData[key];
+}
+
+function markPopupAsShown(number, followDate, followTime) {
+  const today = new Date().toDateString();
+  const key = `${number}_${followDate}_${followTime}`;
+  const shownData = JSON.parse(localStorage.getItem("shownFollowups") || "{}");
+  shownData[key] = { date: today, shown: true };
+  localStorage.setItem("shownFollowups", JSON.stringify(shownData));
+}
+
+// 🗣️ Popup + voice alert (only once per follow-up time per day)
+function showFollowupPopup(number, name, followDate, followTime) {
+  console.log(`🔔 Trying popup for ${name} (${number}) - ${followDate} ${followTime}`);
+
+  if (hasPopupShownToday(number, followDate, followTime)) {
+    console.log(`⚠️ Popup for ${number} on ${followDate} ${followTime} already shown today — skipping.`);
+    return;
+  }
+
+  markPopupAsShown(number, followDate, followTime);
+  console.log(`✅ Marked ${number} ${followDate} ${followTime} as shown today.`);
+
+  // Overlay
+  const overlay = document.createElement("div");
+  overlay.className = "followup-popup fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50";
+
+  // Popup box
+  const popup = document.createElement("div");
+  popup.className = "bg-white text-gray-800 p-6 rounded-2xl shadow-xl text-center w-[350px] relative animate-bounce";
+
+  popup.innerHTML = `
+    <button id="closePopup" class="absolute top-2 right-3 text-gray-500 hover:text-red-500 text-2xl font-bold">&times;</button>
+    <h2 class="text-2xl font-bold text-red-600 mb-2">🚨 Don't Miss Your Follow-Up!</h2>
+    <p class="text-lg mb-2">Lead: <span class="font-semibold">${name}</span></p>
+    <p class="text-lg mb-2">Number: <span class="font-semibold">${number}</span></p>
+    <p class="text-sm text-gray-600">Please contact this lead now.</p>
+  `;
+
+  overlay.appendChild(popup);
+  document.body.appendChild(overlay);
+
+  // 🗣️ Voice alert — says “Follow up” until closed
+  const speakFollowup = () => {
+    const utter = new SpeechSynthesisUtterance("Follow up");
+    utter.pitch = 1;
+    utter.rate = 0.9;
+    utter.volume = 1;
+    speechSynthesis.speak(utter);
+  };
+
+  speakFollowup();
+  const voiceInterval = setInterval(() => {
+    speakFollowup();
+  }, 4000);
+
+  document.getElementById("closePopup").addEventListener("click", () => {
+    clearInterval(voiceInterval);
+    speechSynthesis.cancel();
+    overlay.remove();
+  });
+}
+
+// ✅ Check every 60 seconds
+console.log("🕒 Starting periodic followup check every 60 seconds...");
+setInterval(checkDueFollowups, 60000);
+checkDueFollowups();
+
+
+
+
+let lastFirebaseActivity = Date.now();
+let firebaseActivityListener = null;
+
+// ✅ Function to update online/offline status
+async function updateTelecallerStatus(isOnline) {
+  if (!telecallerEmailKey) return;
+  try {
+    await set(ref(db, `Telecallers/${telecallerEmailKey}/Status`), isOnline);
+    console.log(`✅ Telecaller status set to: ${isOnline}`);
+  } catch (err) {
+    console.error("❌ Error updating status:", err);
+  }
+}
+
+// ✅ Start monitoring Firebase activity for this telecaller
+function startFirebaseActivityMonitor() {
+  const leadsRef = ref(db, `Telecallers/${telecallerEmailKey}/Leads`);
+  const followupsRef = ref(db, `Telecallers/${telecallerEmailKey}/Followups`);
+
+  // Monitor both Leads and Followups nodes
+  firebaseActivityListener = [
+    onValue(leadsRef, () => {
+      lastFirebaseActivity = Date.now();
+      console.log("🔥 Firebase activity detected in Leads");
+    }),
+    onValue(followupsRef, () => {
+      lastFirebaseActivity = Date.now();
+      console.log("🔥 Firebase activity detected in Followups");
+    })
+  ];
+
+  // Every minute, check if no Firebase activity for 15 min
+  setInterval(() => {
+    const diff = Date.now() - lastFirebaseActivity;
+    if (diff > 900000) { // 15 minutes = 900000 ms
+      console.log("⚠️ No Firebase activity for 15 minutes — auto logout...");
+      handleLogout();
+    }
+  }, 60000);
+}
+
+// ✅ Handle login
+function handleLogin() {
+  console.log("🟢 Telecaller logged in");
+  updateTelecallerStatus(true);
+  startFirebaseActivityMonitor();
+}
+
+// ✅ Handle logout
+function handleLogout() {
+  console.log("🔴 Telecaller logging out...");
+  updateTelecallerStatus(false);
+  sessionStorage.removeItem("telecallerEmailKey");
+  window.location.href = "index.html";
+}
+
+// ✅ On tab close or refresh → mark offline
+window.addEventListener("beforeunload", () => {
+  updateTelecallerStatus(false);
+});
+
+// ✅ Initialize if logged in
+if (telecallerEmailKey) {
+  handleLogin();
+}
+
+  </script>
+
+
+<!-- Follow-up Modal -->
+<div id="followupModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded-xl shadow-lg p-6 w-96">
+    <h2 class="text-lg font-semibold mb-4">Set Follow-up</h2>
+    <p class="text-gray-700 mb-2"><strong>Number:</strong> <span id="followupNumber"></span></p>
+    <p class="text-gray-700 mb-4"><strong>Name:</strong> <span id="followupName"></span></p>
+
+    <label class="block text-gray-700 mb-1">Follow-up Date:</label>
+    <input type="date" id="followupDate" class="border border-gray-300 rounded-md w-full p-2 mb-3 text-black">
+
+    <label class="block text-gray-700 mb-1">Follow-up Time:</label>
+    <input type="time" id="followupTime" class="border border-gray-300 rounded-md w-full p-2 mb-4 text-black">
+
+    <div class="flex justify-end space-x-3">
+      <button id="cancelFollowup" class="px-4 py-2 rounded-md bg-red-300 hover:bg-red-400">Cancel</button>
+      <button id="saveFollowup" class="px-4 py-2 rounded-md bg-green-500 text-white hover:bg-green-600">Save</button>
+    </div>
+  </div>
+</div>
+
 
 </body>
 </html>

@@ -12,43 +12,53 @@
       animation: bgShift 10s ease infinite;
       font-family: 'Poppins', sans-serif;
     }
-    @keyframes bgShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
+    @keyframes bgShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
     .glass {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      transition: transform .18s ease, box-shadow .18s ease;
     }
-    .glass:hover {
-      transform: scale(1.02);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    }
+    .glass:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(0,0,0,0.25); }
+    .modal-backdrop { background: rgba(0,0,0,0.7); }
   </style>
 </head>
 
 <body class="min-h-screen text-white flex flex-col">
-  <!-- 🔹 Navbar -->
-  <nav class="flex justify-between items-center p-5 bg-white/20 backdrop-blur-md shadow-md">
+  <!-- Navbar -->
+  <nav class="flex justify-between items-center p-5 bg-white/10">
     <h1 class="text-2xl font-semibold">Admin Dashboard</h1>
-    <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg transition">
-      Logout
-    </button>
+    <div class="flex items-center gap-3">
+      <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded">Logout</button>
+    </div>
   </nav>
 
-  <!-- 🔹 Main Section -->
-  <main class="flex-1 flex items-center justify-center p-6">
-    <div class="glass rounded-2xl p-6 w-full max-w-5xl">
-      <h2 class="text-xl font-bold mb-4 text-center">Telecaller Details</h2>
+  <!-- Main -->
+  <main class="flex-1 p-6 flex justify-center">
+    <div class="w-full max-w-6xl glass rounded-2xl p-6">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
+        <h2 class="text-xl font-bold">Telecaller Details</h2>
 
-      <!-- Telecaller Table -->
+        <!-- Filter controls -->
+        <div class="flex items-center gap-3">
+          <label class="text-sm font-medium">Filter</label>
+          <select id="filterSelect" class="bg-gray text-black px-3 py-1 rounded">
+            <option value="today" selected>Today</option>
+            <option value="total">Total</option>
+            <option value="custom">Custom Range</option>
+          </select>
+
+          <input id="startDate" type="date" class="hidden px-2 py-1 rounded bg-white/10">
+          <input id="endDate" type="date" class="hidden px-2 py-1 rounded bg-white/10">
+          <button id="applyFilter" class="hidden bg-blue-600 px-3 py-1 rounded">Apply</button>
+        </div>
+      </div>
+
+      <!-- Table -->
       <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left text-white border-collapse">
-          <thead class="bg-white/30 text-white uppercase">
+        <table class="w-full text-left text-white text-sm">
+          <thead class="bg-white/10 uppercase">
             <tr>
               <th class="px-4 py-3">Name</th>
               <th class="px-4 py-3">Status</th>
@@ -58,53 +68,53 @@
               <th class="px-4 py-3 text-center">Actions</th>
             </tr>
           </thead>
-          <tbody id="telecallerTable" class="divide-y divide-white/20"></tbody>
+          <tbody id="telecallerTable" class="divide-y divide-white/10"></tbody>
         </table>
       </div>
     </div>
   </main>
 
-  <!-- 🔹 Add Lead Modal -->
-  <div id="leadModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-    <div class="bg-white rounded-2xl shadow-xl p-6 w-11/12 md:w-1/3 text-gray-800 relative">
-      <h2 class="text-lg font-semibold mb-4 text-center">Add New Lead</h2>
-      <button id="closeModal" class="absolute top-3 right-4 text-gray-500 hover:text-black text-2xl">&times;</button>
-
-      <form id="leadForm" class="space-y-4">
+  <!-- Add Lead Modal -->
+  <div id="leadModal" class="hidden fixed inset-0 modal-backdrop items-center justify-center z-50">
+    <div class="bg-white text-gray-900 rounded-2xl p-6 w-11/12 md:w-96 relative">
+      <button id="closeLeadModal" class="absolute right-4 top-3 text-xl">&times;</button>
+      <h3 class="text-lg font-semibold mb-3">Add New Lead</h3>
+      <form id="leadForm" class="space-y-3">
         <div>
-          <label class="block text-sm font-medium mb-1">Name</label>
-          <input id="leadName" type="text" required class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-400">
+          <label class="text-sm">Name</label>
+          <input id="leadName" required class="w-full border rounded px-2 py-2" />
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1">Number</label>
-          <input id="leadNumber" type="tel" required class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-400">
+          <label class="text-sm">Number</label>
+          <input id="leadNumber" type="tel" required class="w-full border rounded px-2 py-2" />
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1">Problem</label>
-          <select id="leadProblem" required class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-400">
+          <label class="text-sm">Problem</label>
+          <select id="leadProblem" required class="w-full border rounded px-2 py-2">
             <option value="" disabled selected>Select Problem</option>
             <option value="Sugar">Sugar</option>
             <option value="MenWellness">Men Wellness</option>
           </select>
         </div>
-        <button type="submit" class="w-full bg-blue-600 text-white rounded-lg py-2 mt-4 hover:bg-blue-700 transition">Add Lead</button>
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded">Add Lead</button>
       </form>
     </div>
   </div>
 
-  <!-- 🔹 View Leads Modal -->
-  <div id="viewModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-    <div class="bg-white rounded-2xl shadow-lg p-6 w-11/12 md:w-2/3 text-gray-800 relative max-h-[80vh] overflow-y-auto">
-      <button id="closeViewModal" class="absolute top-3 right-4 text-gray-600 hover:text-black text-2xl">&times;</button>
-      <h2 class="text-lg font-bold mb-4 text-center">Today's Leads</h2>
-      <table class="w-full text-sm text-left border-collapse">
-        <thead class="bg-blue-100">
+  <!-- View Leads Modal -->
+  <div id="viewModal" class="hidden fixed inset-0 modal-backdrop items-center justify-center z-50">
+    <div class="bg-white text-gray-900 rounded-2xl p-6 w-11/12 md:w-2/3 relative max-h-[80vh] overflow-y-auto">
+      <button id="closeViewModal" class="absolute right-4 top-3 text-xl">&times;</button>
+      <h3 class="text-lg font-semibold mb-3">Leads (filtered)</h3>
+      <table class="w-full text-sm">
+        <thead class="bg-gray-100">
           <tr>
             <th class="px-3 py-2">Name</th>
             <th class="px-3 py-2">Number</th>
             <th class="px-3 py-2">Problem</th>
+            <th class="px-3 py-2">Status</th>
             <th class="px-3 py-2">Time</th>
-            <th class="px-3 py-2 text-center">Action</th>
+            <th class="px-3 py-2 text-center">Actions</th>
           </tr>
         </thead>
         <tbody id="viewLeadsTable"></tbody>
@@ -112,24 +122,25 @@
     </div>
   </div>
 
-  <!-- 🔹 Transfer Modal -->
-  <div id="transferModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-    <div class="bg-white rounded-2xl shadow-lg p-6 w-11/12 md:w-1/3 text-gray-800 relative">
-      <button id="closeTransferModal" class="absolute top-3 right-4 text-gray-600 hover:text-black text-2xl">&times;</button>
-      <h2 class="text-lg font-bold mb-4 text-center">Transfer Lead</h2>
-      <p id="transferLeadInfo" class="text-center text-sm mb-4"></p>
-      <select id="transferSelect" class="w-full border rounded-lg p-2 mb-4">
-        <option disabled selected>Select Telecaller</option>
+  <!-- Transfer Modal -->
+  <div id="transferModal" class="hidden fixed inset-0 modal-backdrop items-center justify-center z-50">
+    <div class="bg-white text-gray-900 rounded-2xl p-6 w-11/12 md:w-96 relative">
+      <button id="closeTransferModal" class="absolute right-4 top-3 text-xl">&times;</button>
+      <h3 class="text-lg font-semibold mb-2">Transfer Lead</h3>
+      <p id="transferLeadInfo" class="text-sm text-gray-600 mb-3"></p>
+      <select id="transferSelect" class="w-full border rounded p-2 mb-3">
+        <option disabled selected>Select active telecaller</option>
       </select>
-      <button id="confirmTransferBtn" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg">Confirm Transfer</button>
+      <button id="confirmTransferBtn" class="w-full bg-green-600 text-white py-2 rounded">Transfer</button>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set, onValue, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-    const firebaseConfig = {
+    // ---------- REPLACE WITH YOUR FIREBASE CONFIG ----------
+   const firebaseConfig = {
   apiKey: "AIzaSyCaFjdwtxT13RdmVau9_6JEFBEIY1xojTY",
   authDomain: "shreejeeayucare-df742.firebaseapp.com",
   databaseURL: "https://shreejeeayucare-df742-default-rtdb.firebaseio.com",
@@ -139,216 +150,296 @@
   appId: "1:119318664445:web:4399d3ddd4a9decc0f5a94",
   measurementId: "G-GKWG1RLZ5R"
 };
+    // ------------------------------------------------------
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const tableBody = document.getElementById("telecallerTable");
-    const modal = document.getElementById("leadModal");
-    const viewModal = document.getElementById("viewModal");
-    const transferModal = document.getElementById("transferModal");
-    const leadForm = document.getElementById("leadForm");
-    const viewLeadsTable = document.getElementById("viewLeadsTable");
-    const closeModal = document.getElementById("closeModal");
-    const closeViewModal = document.getElementById("closeViewModal");
-    const closeTransferModal = document.getElementById("closeTransferModal");
-    const transferSelect = document.getElementById("transferSelect");
-    const transferLeadInfo = document.getElementById("transferLeadInfo");
-    const confirmTransferBtn = document.getElementById("confirmTransferBtn");
+    // UI elements
+    const telecallerTable = document.getElementById('telecallerTable');
+    const filterSelect = document.getElementById('filterSelect');
+    const startDate = document.getElementById('startDate');
+    const endDate = document.getElementById('endDate');
+    const applyFilter = document.getElementById('applyFilter');
 
-    let currentTelecallerId = null;
-    let currentTransferLead = null;
-    let telecallersList = {};
+    const leadModal = document.getElementById('leadModal');
+    const closeLeadModal = document.getElementById('closeLeadModal');
+    const leadForm = document.getElementById('leadForm');
+    const leadNameInput = document.getElementById('leadName');
+    const leadNumberInput = document.getElementById('leadNumber');
+    const leadProblemInput = document.getElementById('leadProblem');
 
-    // ✅ Load Telecallers
-    const teleRef = ref(db, "Telecallers");
-    onValue(teleRef, (snapshot) => {
-      tableBody.innerHTML = "";
-      if (snapshot.exists()) {
-        telecallersList = snapshot.val();
-        Object.keys(telecallersList).forEach((key) => {
-          const tele = telecallersList[key];
-          const statusColor = tele.Status ? "text-green-400" : "text-red-400";
-          const statusText = tele.Status ? "Active 🟢" : "Inactive 🔴";
+    const viewModal = document.getElementById('viewModal');
+    const closeViewModal = document.getElementById('closeViewModal');
+    const viewLeadsTable = document.getElementById('viewLeadsTable');
 
-          let ordered = 0, remaining = 0, total = 0;
-          if (tele.Leads) {
-            Object.values(tele.Leads).forEach((lead) => {
-              total++;
-              if (lead.Status === "Ordered") ordered++;
-              else if (lead.Status === "Not Called") remaining++;
-            });
-          }
+    const transferModal = document.getElementById('transferModal');
+    const closeTransferModal = document.getElementById('closeTransferModal');
+    const transferSelect = document.getElementById('transferSelect');
+    const transferLeadInfo = document.getElementById('transferLeadInfo');
+    const confirmTransferBtn = document.getElementById('confirmTransferBtn');
 
-          const row = `
-            <tr class="hover:bg-white/10 transition">
-              <td class="px-4 py-3">${tele.Name || "—"}</td>
-              <td class="px-4 py-3 ${statusColor} font-semibold">${statusText}</td>
-              <td class="px-4 py-3">${ordered}</td>
-              <td class="px-4 py-3">${remaining}</td>
-              <td class="px-4 py-3 font-bold">${total}</td>
-              <td class="px-4 py-3 text-center flex gap-2 justify-center">
-                <button class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-sm addLeadBtn" data-id="${key}">
-                  ➕ Add Lead
-                </button>
-                <button class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-sm viewLeadsBtn" data-id="${key}">
-                  👁 View
-                </button>
-              </td>
-            </tr>`;
-          tableBody.insertAdjacentHTML("beforeend", row);
-        });
+    const logoutBtn = document.getElementById('logoutBtn');
 
-        // add listeners
-        document.querySelectorAll(".addLeadBtn").forEach(btn => {
-          btn.addEventListener("click", (e) => {
-            currentTelecallerId = e.target.dataset.id;
-            modal.classList.remove("hidden");
-          });
-        });
+    // state
+    let telecallers = {};          // full snapshot of Telecallers node
+    let filterType = 'today';
+    let currentTelecallerId = null; // id when opening add lead modal
+    let viewingTelecallerId = null; // id when opening view modal
+    let leadToTransfer = null;      // { number, data } for transfer
 
-        document.querySelectorAll(".viewLeadsBtn").forEach(btn => {
-          btn.addEventListener("click", (e) => {
-            const teleId = e.target.dataset.id;
-            loadTodaysLeads(teleId);
-          });
-        });
+    // caches: store last 5 leads added (to avoid duplicates)
+    function getRecentLeads() {
+      try { return JSON.parse(localStorage.getItem('recentLeads')) || []; }
+      catch { return []; }
+    }
+    function pushRecentLead(lead) {
+      const arr = getRecentLeads();
+      arr.unshift(lead);
+      if (arr.length > 5) arr.pop();
+      localStorage.setItem('recentLeads', JSON.stringify(arr));
+    }
+
+    // ---------- filter UI behavior ----------
+    filterSelect.addEventListener('change', () => {
+      filterType = filterSelect.value;
+      if (filterType === 'custom') {
+        startDate.classList.remove('hidden');
+        endDate.classList.remove('hidden');
+        applyFilter.classList.remove('hidden');
+      } else {
+        startDate.classList.add('hidden'); endDate.classList.add('hidden'); applyFilter.classList.add('hidden');
+        renderTable();
+      }
+    });
+    applyFilter.addEventListener('click', renderTable);
+
+    // ---------- listen Telecallers node ----------
+    const teleRef = ref(db, 'Telecallers');
+    onValue(teleRef, snapshot => {
+      telecallers = snapshot.exists() ? snapshot.val() : {};
+      renderTable();
+      // If view modal open, refresh its content too (keeps real-time)
+      if (viewModal.classList.contains('hidden') === false && viewingTelecallerId) {
+        loadViewModal(viewingTelecallerId);
       }
     });
 
-    // ✅ Load today's leads
-    function loadTodaysLeads(teleId) {
-      currentTelecallerId = teleId;
-      const today = new Date().toLocaleDateString();
-      const leadsRef = ref(db, `Telecallers/${teleId}/Leads`);
-      onValue(leadsRef, (snap) => {
-        viewLeadsTable.innerHTML = "";
-        if (snap.exists()) {
-          const leads = snap.val();
-          Object.entries(leads).forEach(([number, info]) => {
-            if (info.Time && info.Time.includes(today)) {
-              viewLeadsTable.insertAdjacentHTML("beforeend", `
-                <tr class="border-b">
-                  <td class="px-3 py-2">${info.Name}</td>
-                  <td class="px-3 py-2">${number}</td>
-                  <td class="px-3 py-2">${info.Problem}</td>
-                  <td class="px-3 py-2">${info.Time}</td>
-                  <td class="px-3 py-2 text-center">
-                    <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md text-xs transferBtn" data-number="${number}">Transfer</button>
-                  </td>
-                </tr>
-              `);
-            }
-          });
-
-          document.querySelectorAll(".transferBtn").forEach(btn => {
-            btn.addEventListener("click", async (e) => {
-              const number = e.target.dataset.number;
-              const leadRef = ref(db, `Telecallers/${teleId}/Leads/${number}`);
-              const leadSnap = await get(leadRef);
-              if (leadSnap.exists()) {
-                currentTransferLead = { number, data: leadSnap.val() };
-                openTransferModal();
-              }
-            });
-          });
-        } else {
-          viewLeadsTable.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">No leads today</td></tr>`;
-        }
-        viewModal.classList.remove("hidden");
-      });
+    // ---------- helpers ----------
+    function dateStringFromTimeField(timeField) {
+      // Time field is stored as Date.toLocaleString() in previous code; try to parse robustly.
+      // We'll return JS Date or null
+      if (!timeField) return null;
+      const d = new Date(timeField);
+      if (!isNaN(d)) return d;
+      // fallback: try splitting if stored as "date, time" earlier
+      if (typeof timeField === 'string' && timeField.includes(', ')) {
+        // try reconstructing
+        const [datePart, timePart] = timeField.split(', ');
+        const tryDate = new Date(`${datePart} ${timePart}`);
+        return isNaN(tryDate) ? null : tryDate;
+      }
+      return null;
     }
 
-    // ✅ Open Transfer Modal
-    function openTransferModal() {
-      transferSelect.innerHTML = `<option disabled selected>Select Telecaller</option>`;
-      Object.keys(telecallersList).forEach(id => {
-        const tele = telecallersList[id];
-        if (tele.Status === true && id !== currentTelecallerId) {
-          transferSelect.insertAdjacentHTML("beforeend", `<option value="${id}">${telecallersList[id].Name}</option>`);
-        }
-      });
-      transferLeadInfo.textContent = `Transfer lead: ${currentTransferLead.data.Name} (${currentTransferLead.number})`;
-      transferModal.classList.remove("hidden");
+    function isLeadInFilter(lead) {
+      // lead.Time expected to be a string; convert to Date for comparisons
+      if (!lead?.Time) return filterType === 'total'; // if no Time, count only if total
+      const leadDate = dateStringFromTimeField(lead.Time);
+      if (!leadDate) return filterType === 'total';
+      if (filterType === 'total') return true;
+      if (filterType === 'today') {
+        const now = new Date();
+        return leadDate.toDateString() === now.toDateString();
+      }
+      if (filterType === 'custom') {
+        if (!startDate.value || !endDate.value) return false;
+        // normalize day-by-day (midnight)
+        const start = new Date(startDate.value + 'T00:00:00');
+        const end = new Date(endDate.value + 'T23:59:59');
+        return leadDate >= start && leadDate <= end;
+      }
+      return true;
     }
 
-    // ✅ Confirm Transfer
-    confirmTransferBtn.addEventListener("click", async () => {
-      const selectedTeleId = transferSelect.value;
-      if (!selectedTeleId || !currentTransferLead) {
-        alert("Please select a telecaller.");
+    // ---------- render table ----------
+    function renderTable() {
+      telecallerTable.innerHTML = '';
+      const keys = Object.keys(telecallers || {});
+      if (keys.length === 0) {
+        telecallerTable.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-white/70">No telecallers found</td></tr>`;
         return;
       }
+      keys.forEach(id => {
+        const t = telecallers[id] || {};
+        let ordered = 0, remaining = 0, total = 0;
+        if (t.Leads) {
+          Object.values(t.Leads).forEach(ld => {
+            if (!isLeadInFilter(ld)) return;
+            total++;
+            if (ld.Status === 'Ordered') ordered++;
+            else if (ld.Status === 'Not Called') remaining++;
+          });
+        }
+        const statusText = t.Status ? 'Active 🟢' : 'Inactive 🔴';
+        const statusClass = t.Status ? 'text-green-400' : 'text-red-400';
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-white/5 transition';
+        row.innerHTML = `
+          <td class="px-4 py-3">${t.Name || '—'}</td>
+          <td class="px-4 py-3 ${statusClass}">${statusText}</td>
+          <td class="px-4 py-3">${ordered}</td>
+          <td class="px-4 py-3">${remaining}</td>
+          <td class="px-4 py-3 font-semibold">${total}</td>
+          <td class="px-4 py-3 text-center flex gap-2 justify-center">
+            <button class="addLeadBtn bg-blue-600 px-3 py-1 rounded text-sm" data-id="${id}">➕ Add Lead</button>
+            <button class="viewLeadsBtn bg-green-600 px-3 py-1 rounded text-sm" data-id="${id}">👁 View</button>
+          </td>`;
+        telecallerTable.appendChild(row);
+      });
 
-      const targetRef = ref(db, `Telecallers/${selectedTeleId}/Leads/${currentTransferLead.number}`);
-      const sourceRef = ref(db, `Telecallers/${currentTelecallerId}/Leads/${currentTransferLead.number}`);
+      // attach listeners for add/view
+      document.querySelectorAll('.addLeadBtn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          currentTelecallerId = e.currentTarget.dataset.id;
+          openAddLeadModal();
+        });
+      });
+      document.querySelectorAll('.viewLeadsBtn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          viewingTelecallerId = e.currentTarget.dataset.id;
+          loadViewModal(viewingTelecallerId);
+        });
+      });
+    }
 
-      await set(targetRef, currentTransferLead.data);
-      await remove(sourceRef);
-
-      alert("✅ Lead transferred successfully!");
-      transferModal.classList.add("hidden");
+    // ---------- Add Lead Modal ----------
+    function openAddLeadModal() {
+      leadForm.reset();
+      leadModal.classList.remove('hidden');
+      leadModal.classList.add('flex');
+    }
+    closeLeadModal.addEventListener('click', () => {
+      leadModal.classList.add('hidden');
     });
 
-    // ✅ Close modals
-    [closeModal, closeViewModal, closeTransferModal].forEach(btn => btn.addEventListener("click", () => {
-      modal.classList.add("hidden");
-      viewModal.classList.add("hidden");
-      transferModal.classList.add("hidden");
-    }));
+    leadForm.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const name = leadNameInput.value.trim();
+      const number = leadNumberInput.value.trim();
+      const problem = leadProblemInput.value;
+      if (!number) return alert('Enter number.');
 
-    window.addEventListener("click", (e) => {
-      if (e.target === modal) modal.classList.add("hidden");
-      if (e.target === viewModal) viewModal.classList.add("hidden");
-      if (e.target === transferModal) transferModal.classList.add("hidden");
+      // check cache
+      const recent = getRecentLeads();
+      if (recent.some(r => r.number === number)) {
+        if (!confirm('This number was added recently. Do you still want to add?')) return;
+      }
+
+      const time = new Date().toLocaleString();
+      if (!currentTelecallerId) {
+        alert('Telecaller not selected.');
+        return;
+      }
+      // write to firebase
+      const leadRef = ref(db, `Telecallers/${currentTelecallerId}/Leads/${number}`);
+      await set(leadRef, { Name: name, Problem: problem, Status: 'Not Called', Remark: '', Time: time });
+
+      // push to cache
+      pushRecentLead({ number, name, time });
+
+      alert('Lead added ✅');
+      leadModal.classList.add('hidden');
+      leadForm.reset();
     });
 
-    // ✅ Add Lead
-   leadForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const name = document.getElementById("leadName").value.trim();
-  const number = document.getElementById("leadNumber").value.trim();
-  const problem = document.getElementById("leadProblem").value;
-  const time = new Date().toLocaleString();
+    // ---------- View Modal ----------
+    function loadViewModal(teleId) {
+      viewLeadsTable.innerHTML = '';
+      const tel = telecallers[teleId] || {};
+      if (!tel.Leads) {
+        viewLeadsTable.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-gray-600">No leads</td></tr>`;
+        viewModal.classList.remove('hidden');
+        viewModal.classList.add('flex');
+        return;
+      }
+      // iterate and show only those matching filter
+      Object.entries(tel.Leads).forEach(([num, ld]) => {
+  if (!isLeadInFilter(ld)) return;
 
-  // ✅ Get last 5 cached leads (from localStorage)
-  let recentLeads = JSON.parse(localStorage.getItem("recentLeads")) || [];
+  // 🔹 Show only leads whose Status is "Not Called" or "Not Called / Remaining"
+  const status = (ld.Status || '').toLowerCase();
+  if (status !== 'not called' && status !== 'not called / remaining') return;
 
-  // ✅ Check if this number was added recently
-  const isDuplicate = recentLeads.some((lead) => lead.number === number);
-
-  if (isDuplicate) {
-    alert("⚠️ This lead was recently added! Please avoid duplicates.");
-    return;
-  }
-
-  // ✅ Save to Firebase
-  const leadRef = ref(db, `Telecallers/${currentTelecallerId}/Leads/${number}`);
-  await set(leadRef, {
-    Name: name,
-    Problem: problem,
-    Status: "Not Called",
-    Remark: "",
-    Time: time
-  });
-
-  // ✅ Add to cache (max 5 leads)
-  recentLeads.unshift({ name, number, time });
-  if (recentLeads.length > 5) recentLeads.pop();
-  localStorage.setItem("recentLeads", JSON.stringify(recentLeads));
-
-  // ✅ Success alert
-  alert("✅ Lead added successfully!");
-  leadForm.reset();
-  modal.classList.add("hidden");
+  const tr = document.createElement('tr');
+  tr.className = 'border-b';
+  tr.innerHTML = `
+    <td class="px-3 py-2">${ld.Name || '—'}</td>
+    <td class="px-3 py-2">${num}</td>
+    <td class="px-3 py-2">${ld.Problem || '—'}</td>
+    <td class="px-3 py-2">${ld.Status || '—'}</td>
+    <td class="px-3 py-2">${ld.Time || '—'}</td>
+    <td class="px-3 py-2 text-center">
+      <button class="transferBtn bg-yellow-500 px-2 py-1 rounded text-sm" data-num="${num}">🔁 Transfer</button>
+    </td>`;
+  viewLeadsTable.appendChild(tr);
 });
 
+      // attach transfer listeners
+      viewModal.classList.remove('hidden'); viewModal.classList.add('flex');
 
-    // ✅ Logout
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      localStorage.removeItem("currentTelecaller");
-      window.location.href = "index.html";
+      document.querySelectorAll('.transferBtn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const number = e.currentTarget.dataset.num;
+          // fetch lead snapshot to get current data
+          const leadSnapshot = await get(ref(db, `Telecallers/${teleId}/Leads/${number}`));
+          if (!leadSnapshot.exists()) return alert('Lead disappeared (maybe transferred).');
+          leadToTransfer = { number, data: leadSnapshot.val(), from: teleId };
+          openTransferModal();
+        });
+      });
+    }
+
+    closeViewModal.addEventListener('click', () => viewModal.classList.add('hidden'));
+
+    // ---------- Transfer Modal ----------
+    function openTransferModal() {
+      transferSelect.innerHTML = '<option disabled selected>Select active telecaller</option>';
+      Object.entries(telecallers).forEach(([id, t]) => {
+        if (t.Status && id !== leadToTransfer.from) {
+          transferSelect.insertAdjacentHTML('beforeend', `<option value="${id}">${t.Name || id}</option>`);
+        }
+      });
+      transferLeadInfo.textContent = `${leadToTransfer.data.Name || '—'} (${leadToTransfer.number})`;
+      transferModal.classList.remove('hidden'); transferModal.classList.add('flex');
+    }
+
+    closeTransferModal.addEventListener('click', () => transferModal.classList.add('hidden'));
+
+    confirmTransferBtn.addEventListener('click', async () => {
+      const targetId = transferSelect.value;
+      if (!targetId) return alert('Select telecaller to transfer to.');
+      const { number, data, from } = leadToTransfer;
+      // set at target, remove from source
+      await set(ref(db, `Telecallers/${targetId}/Leads/${number}`), {
+        ...data,
+        Status: 'Not Called', // reset status optionally
+        Remark: ''
+      });
+      await remove(ref(db, `Telecallers/${from}/Leads/${number}`));
+      transferModal.classList.add('hidden');
+      viewModal.classList.add('hidden');
+      alert('Lead transferred ✅');
+      leadToTransfer = null;
     });
+
+    // ---------- Logout ----------
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('currentTelecaller');
+      window.location.href = 'index.html';
+    });
+
+    // ---------- End ----------
   </script>
 </body>
 </html>
