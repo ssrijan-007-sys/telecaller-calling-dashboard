@@ -238,6 +238,9 @@ if (dateFilter === "today") {
                   <button class="text-yellow-400 hover:text-yellow-300 text-sm font-semibold" data-edit="${lead.number}">✏️</button>
                 </div>
                 <select data-status="${lead.number}" class="rounded-md text-sm px-2 py-1">
+                
+                  <option ${currentStatus === "Not Called" ? "selected" : ""}>Not Called</option>
+                
                   <option ${currentStatus === "Not Interested" ? "selected" : ""}>Not Interested</option>
                   <option ${currentStatus === "Picked" ? "selected" : ""}>Picked</option>
                   <option ${currentStatus === "Not Picked" ? "selected" : ""}>Not Picked</option>
@@ -611,3 +614,4 @@ if (telecallerEmailKey) {
 
 </body>
 </html>
+
