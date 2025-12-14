@@ -264,54 +264,128 @@
 
     // ---------- render table ----------
     function renderTable() {
-      telecallerTable.innerHTML = '';
-      const keys = Object.keys(telecallers || {});
-      if (keys.length === 0) {
-        telecallerTable.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-white/70">No telecallers found</td></tr>`;
-        return;
+  telecallerTable.innerHTML = '';
+  const keys = Object.keys(telecallers || {});
+  if (keys.length === 0) {
+    telecallerTable.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-white/70">No telecallers found</td></tr>`;
+    return;
+  }
+
+  // helper to check a plain date string (YYYY-MM-DD or other) against current filter
+  function isDateInFilter(dateStr) {
+  if (!dateStr) return false;
+
+  let d;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [y, m, day] = dateStr.split('-');
+    d = new Date(y, m - 1, day);
+  } else {
+    d = new Date(dateStr);
+  }
+
+  if (isNaN(d)) return false;
+  if (filterType === 'total') return true;
+
+  if (filterType === 'today') {
+    const t = new Date();
+    return d.getFullYear() === t.getFullYear() &&
+           d.getMonth() === t.getMonth() &&
+           d.getDate() === t.getDate();
+  }
+
+  if (filterType === 'custom') {
+    if (!startDate.value || !endDate.value) return false;
+    const start = new Date(startDate.value + 'T00:00:00');
+    const end = new Date(endDate.value + 'T23:59:59');
+    return d >= start && d <= end;
+  }
+
+  return true;
+}
+
+
+
+  keys.forEach(id => {
+          const t = telecallers[id] || {};
+
+      // ---------- ORDERED ----------
+      let ordered = 0;
+      if (t.Ordered) {
+        Object.values(t.Ordered).forEach(o => {
+          const d = o["Order Date"] || o["Follow-Up Date"] || '';
+          if (isDateInFilter(d)) ordered++;
+        });
       }
-      keys.forEach(id => {
-        const t = telecallers[id] || {};
-        let ordered = 0, remaining = 0, total = 0;
-        if (t.Leads) {
-          Object.values(t.Leads).forEach(ld => {
-            if (!isLeadInFilter(ld)) return;
-            total++;
-            if (ld.Status === 'Ordered') ordered++;
-            else if (ld.Status === 'Not Called') remaining++;
+
+      // ---------- REMAINING ----------
+      let remaining = 0;
+      if (t.Leads) {
+        Object.values(t.Leads).forEach(l => {
+          if (l.Status === 'Not Called' && isDateInFilter(l.Time)) {
+            remaining++;
+          }
+        });
+      }
+
+      // ---------- TOTAL ----------
+      let total = 0;
+
+      if (filterType === 'today') {
+        const todayKey = new Date().toISOString().split('T')[0];
+        total = t.DailyCounter?.[todayKey]?.count || 0;
+      }
+
+      if (filterType === 'total') {
+        total =
+          (t.Leads ? Object.keys(t.Leads).length : 0) +
+          (t.Followups ? Object.keys(t.Followups).length : 0) +
+          (t.Ordered ? Object.keys(t.Ordered).length : 0);
+      }
+
+      if (filterType === 'custom') {
+        total = 0;
+        if (t.DailyCounter) {
+          Object.entries(t.DailyCounter).forEach(([date, obj]) => {
+            if (isDateInFilter(date)) {
+              total += obj.count || 0;
+            }
           });
         }
-        const statusText = t.Status ? 'Active 🟢' : 'Inactive 🔴';
-        const statusClass = t.Status ? 'text-green-400' : 'text-red-400';
-        const row = document.createElement('tr');
-        row.className = 'hover:bg-white/5 transition';
-        row.innerHTML = `
-          <td class="px-4 py-3">${t.Name || '—'}</td>
-          <td class="px-4 py-3 ${statusClass}">${statusText}</td>
-          <td class="px-4 py-3">${ordered}</td>
-          <td class="px-4 py-3">${remaining}</td>
-          <td class="px-4 py-3 font-semibold">${total}</td>
-          <td class="px-4 py-3 text-center flex gap-2 justify-center">
-            <button class="addLeadBtn bg-blue-600 px-3 py-1 rounded text-sm" data-id="${id}">➕ Add Lead</button>
-            <button class="viewLeadsBtn bg-green-600 px-3 py-1 rounded text-sm" data-id="${id}">👁 View</button>
-          </td>`;
-        telecallerTable.appendChild(row);
-      });
+      }
 
-      // attach listeners for add/view
-      document.querySelectorAll('.addLeadBtn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          currentTelecallerId = e.currentTarget.dataset.id;
-          openAddLeadModal();
-        });
-      });
-      document.querySelectorAll('.viewLeadsBtn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          viewingTelecallerId = e.currentTarget.dataset.id;
-          loadViewModal(viewingTelecallerId);
-        });
-      });
-    }
+
+    const statusText = t.Status ? 'Active 🟢' : 'Inactive 🔴';
+    const statusClass = t.Status ? 'text-green-400' : 'text-red-400';
+    const row = document.createElement('tr');
+    row.className = 'hover:bg-white/5 transition';
+    row.innerHTML = `
+      <td class="px-4 py-3">${t.Name || '—'}</td>
+      <td class="px-4 py-3 ${statusClass}">${statusText}</td>
+      <td class="px-4 py-3">${ordered}</td>
+      <td class="px-4 py-3">${remaining}</td>
+      <td class="px-4 py-3 font-semibold">${total}</td>
+      <td class="px-4 py-3 text-center flex gap-2 justify-center">
+        <button class="addLeadBtn bg-blue-600 px-3 py-1 rounded text-sm" data-id="${id}">➕ Add Lead</button>
+        <button class="viewLeadsBtn bg-green-600 px-3 py-1 rounded text-sm" data-id="${id}">👁 View</button>
+      </td>`;
+    telecallerTable.appendChild(row);
+  });
+
+  // re-attach listeners as before
+  document.querySelectorAll('.addLeadBtn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      currentTelecallerId = e.currentTarget.dataset.id;
+      openAddLeadModal();
+    });
+  });
+  document.querySelectorAll('.viewLeadsBtn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      viewingTelecallerId = e.currentTarget.dataset.id;
+      loadViewModal(viewingTelecallerId);
+    });
+  });
+}
+
 
     // ---------- Add Lead Modal ----------
     function openAddLeadModal() {
@@ -347,8 +421,15 @@
 
       // push to cache
       pushRecentLead({ number, name, time });
+      // -------- DAILY COUNTER LOGIC --------
+      const todayKey = new Date().toISOString().split('T')[0];
+      const counterRef = ref(db, `Telecallers/${currentTelecallerId}/DailyCounter/${todayKey}/count`);
 
-      alert('Lead added ✅');
+      const snap = await get(counterRef);
+      const currentCount = snap.exists() ? snap.val() : 0;
+      await set(counterRef, currentCount + 1);
+
+      
       leadModal.classList.add('hidden');
       leadForm.reset();
     });
