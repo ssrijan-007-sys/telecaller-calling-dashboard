@@ -498,6 +498,7 @@
     closeTransferModal.addEventListener('click', () => transferModal.classList.add('hidden'));
 
     confirmTransferBtn.addEventListener('click', async () => {
+      const todayKey = new Date().toISOString().split('T')[0];
       const targetId = transferSelect.value;
       if (!targetId) return alert('Select telecaller to transfer to.');
       const { number, data, from } = leadToTransfer;
@@ -507,7 +508,17 @@
         Status: 'Not Called', // reset status optionally
         Remark: ''
       });
+    
       await remove(ref(db, `Telecallers/${from}/Leads/${number}`));
+      // update daily counters
+      const counterRefFrom = ref(db, `Telecallers/${from}/DailyCounter/${todayKey}/count`);
+      const counterRefTo = ref(db, `Telecallers/${targetId}/DailyCounter/${todayKey}/count`);
+      const snapTo = await get(counterRefTo);
+      const currentCountTo = snapTo.exists() ? snapTo.val() : 0;
+      await set(counterRefTo, currentCountTo + 1);
+      const snap = await get(counterRefFrom);
+      const currentCount = snap.exists() ? snap.val() : 0;
+      await set(counterRefFrom, currentCount - 1);
       transferModal.classList.add('hidden');
       viewModal.classList.add('hidden');
       alert('Lead transferred ✅');
