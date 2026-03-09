@@ -450,7 +450,7 @@
 
   // 🔹 Show only leads whose Status is "Not Called" or "Not Called / Remaining"
   const status = (ld.Status || '').toLowerCase();
-  if (status !== 'not called' && status !== 'not called / remaining') return;
+  if (status !== 'not called' && status !== 'not picked') return;
 
   const tr = document.createElement('tr');
   tr.className = 'border-b';
@@ -506,6 +506,7 @@
       await set(ref(db, `Telecallers/${targetId}/Leads/${number}`), {
         ...data,
         Status: 'Not Called', // reset status optionally
+        Time: new Date().toLocaleString(),
         Remark: ''
       });
     
