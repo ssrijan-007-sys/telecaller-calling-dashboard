@@ -49,6 +49,7 @@
       <button id="followupBtn" class="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded-md text-sm font-medium">
         Followups
       </button>
+      <button id="pendingBtn" class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-md text-sm font-medium"> Pending </button>
       <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-md text-sm font-medium">
         Logout
       </button>
@@ -168,13 +169,22 @@
     let allLeads = {};
     let dateFilter = "today";
     let customRange = null;
-
+    const MAX_ATTEMPTS = 2;
     const telecallerRef = ref(db, `Telecallers/${telecallerEmailKey}/Leads`);
 
     onValue(telecallerRef, (snapshot) => {
-      allLeads = snapshot.exists() ? snapshot.val() : {};
-      renderLeads();
-    });
+  allLeads = snapshot.exists() ? snapshot.val() : {};
+
+  Object.entries(allLeads).forEach(([num, data]) => {
+    if (data.attempt === undefined) {
+      update(ref(db, `Telecallers/${telecallerEmailKey}/Leads/${num}`), {
+        attempt: 0
+      });
+    }
+  });
+
+  renderLeads();
+});
 
     // Confirm modal helpers
     const confirmModal = document.getElementById('confirmModal');
@@ -305,6 +315,7 @@ if (dateFilter === "today") {
             const card = document.createElement("div");
             card.className = "glass p-4 rounded-lg shadow-md mb-3";
             const currentStatus = lead.Status || "Not Called";
+            const attempt = lead.attempt || 0;
             card.innerHTML = `
               <div class="flex justify-between items-center mb-2">
                 <div class="flex items-center gap-2">
@@ -323,7 +334,14 @@ if (dateFilter === "today") {
               <p><strong>Problem:</strong> ${lead.Problem || "—"}</p>
               <p><strong>Time:</strong> ${new Date(lead.Time).toLocaleTimeString()}</p>
               <input type="text" placeholder="Add a remark..." data-remark="${lead.number}" class="w-full mt-2 bg-white/10 border border-white/30 rounded px-3 py-2 text-white placeholder-white/70 focus:outline-none focus:ring-1 focus:ring-blue-400" />
-              <div class="flex justify-end mt-2">
+              ${attempt > 0 && attempt <= MAX_ATTEMPTS ? `
+              <button class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded mt-2 attemptBtn"
+              data-number="${lead.number}"
+              data-attempt="${attempt}">
+              📞 Call Again (${attempt}/${MAX_ATTEMPTS})
+              </button>
+              ` : ""}
+                              <div class="flex justify-end mt-2">
                 <button data-view="${lead.number}" class="bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded text-sm">View</button>
                 <button class="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-md followupBtn" 
           data-number="${lead.number}" 
@@ -334,19 +352,84 @@ if (dateFilter === "today") {
 
             `;
 
+
+            const attemptBtn = card.querySelector(".attemptBtn");
+
+if (attemptBtn) {
+  attemptBtn.addEventListener("click", async () => {
+
+    const number = attemptBtn.dataset.number;
+    const attempt = parseInt(attemptBtn.dataset.attempt);
+
+    const leadRef = ref(db, `Telecallers/${telecallerEmailKey}/Leads/${number}`);
+
+    if (attempt + 1 < MAX_ATTEMPTS) {
+    
+      const newAttempt = Math.min(attempt + 1, MAX_ATTEMPTS);
+      await update(leadRef, {
+        attempt: newAttempt,
+        Status: "Not Called"
+      });
+
+      showMessage(`Attempt ${attempt + 1} recorded. Try calling again.`);
+      renderLeads();
+    } else {
+
+      showConfirm(
+        "Move to Not Picked",
+        "Maximum attempts reached. Move lead to NotPicked list?",
+        async () => {
+
+          const snap = await get(leadRef);
+          if (!snap.exists()) return;
+
+          const leadData = snap.val();
+
+          await set(
+            ref(db, `Telecallers/${telecallerEmailKey}/NotPicked/${number}`),
+            {
+              ...leadData,
+              Status: "Not Picked",
+              MovedAt: new Date().toISOString(),
+              attempt: 0
+            }
+          );
+
+          await remove(leadRef);
+
+          showMessage("Lead moved to NotPicked.");
+        }
+      );
+
+    }
+
+  });
+}
             // ✅ Event handlers
             card.querySelector(`[data-status="${lead.number}"]`).addEventListener("change", async (e) => {
   const newStatus = e.target.value;
   const number = lead.number;
   const leadRef = ref(db, `Telecallers/${telecallerEmailKey}/Leads/${number}`);
 
-  // If NORMAL status updates (Not Picked, Picked, etc.)
-  if (newStatus !== "Ordered" && newStatus !== "Not Interested") {
-    update(leadRef, { Status: newStatus });
-    return;
-  }
+if (newStatus === "Not Picked") {
 
-  // =================================
+  e.target.value = lead.Status || "Not Called";
+
+  const attempt = lead.attempt || 0;
+
+  const leadRef = ref(db, `Telecallers/${telecallerEmailKey}/Leads/${number}`);
+
+  await update(leadRef, {
+    attempt: attempt + 1,
+    Status: "Not Picked"
+  });
+
+  showMessage(`Attempt ${attempt + 1} recorded. Use Call Again button.`);
+
+  return;
+}
+
+// =================================
   // 🚨 CASE 1: ORDERED — move lead
   // =================================
   if (newStatus === "Ordered") {
@@ -450,6 +533,9 @@ if (dateFilter === "today") {
     });
     document.getElementById("orderedBtn").addEventListener("click", () => {
       window.location.href = "ordered.html";
+    });
+    document.getElementById("pendingBtn").addEventListener("click", () => {
+      window.location.href = "pending.html";
     });
 
    // =============== FOLLOW-UP MODAL HANDLING ===============

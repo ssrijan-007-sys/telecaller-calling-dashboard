@@ -30,6 +30,9 @@
   <nav class="flex justify-between items-center p-5 bg-white/10">
     <h1 class="text-2xl font-semibold">Admin Dashboard</h1>
     <div class="flex items-center gap-3">
+      <button id="distributeBtn" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded">
+      Distribute Now
+      </button>
       <button id="logoutBtn" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded">Logout</button>
     </div>
   </nav>
@@ -358,18 +361,41 @@
     const statusClass = t.Status ? 'text-green-400' : 'text-red-400';
     const row = document.createElement('tr');
     row.className = 'hover:bg-white/5 transition';
-    row.innerHTML = `
-      <td class="px-4 py-3">${t.Name || '—'}</td>
-      <td class="px-4 py-3 ${statusClass}">${statusText}</td>
-      <td class="px-4 py-3">${ordered}</td>
-      <td class="px-4 py-3">${remaining}</td>
-      <td class="px-4 py-3 font-semibold">${total}</td>
-      <td class="px-4 py-3 text-center flex gap-2 justify-center">
-        <button class="addLeadBtn bg-blue-600 px-3 py-1 rounded text-sm" data-id="${id}">➕ Add Lead</button>
-        <button class="viewLeadsBtn bg-green-600 px-3 py-1 rounded text-sm" data-id="${id}">👁 View</button>
-      </td>`;
+    const pendingEnabled = t.ReceivePending === true;
+
+const pendingText = pendingEnabled ? "Pending: ✓" : "Pending: ✗";
+const pendingColor = pendingEnabled ? "bg-green-600" : "bg-red-600";
     telecallerTable.appendChild(row);
+    row.innerHTML = `
+<td class="px-4 py-3">${t.Name || '—'}</td>
+<td class="px-4 py-3 ${statusClass}">${statusText}</td>
+<td class="px-4 py-3">${ordered}</td>
+<td class="px-4 py-3">${remaining}</td>
+<td class="px-4 py-3 font-semibold">${total}</td>
+
+<td class="px-4 py-3 text-center flex gap-2 justify-center">
+
+<button class="addLeadBtn bg-blue-600 px-3 py-1 rounded text-sm" data-id="${id}">
+➕ Add Lead
+</button>
+
+<button class="viewLeadsBtn bg-green-600 px-3 py-1 rounded text-sm" data-id="${id}">
+👁 View
+</button>
+
+
+<button class="togglePending ${pendingColor} px-3 py-1 rounded text-sm"
+data-id="${id}">
+${pendingText}
+</button>
+
+</td>
+`;
+
   });
+
+
+
 
   // re-attach listeners as before
   document.querySelectorAll('.addLeadBtn').forEach(btn => {
@@ -383,7 +409,32 @@
       viewingTelecallerId = e.currentTarget.dataset.id;
       loadViewModal(viewingTelecallerId);
     });
+  }
+);
+document.querySelectorAll('.togglePending').forEach(btn => {
+  btn.addEventListener('click', async (e) => {
+
+    const id = e.currentTarget.dataset.id;
+
+    try {
+
+      const pendingRef = ref(db, `Telecallers/${id}/ReceivePending`);
+
+      const snap = await get(pendingRef);
+
+      const current = snap.exists() ? snap.val() : false;
+
+      await set(pendingRef, !current);
+
+      
+
+    } catch (err) {
+      console.error(err);
+      alert("Error updating pending status");
+    }
+
   });
+});
 }
 
 
@@ -462,7 +513,9 @@
     <td class="px-3 py-2">${ld.Time || '—'}</td>
     <td class="px-3 py-2 text-center">
       <button class="transferBtn bg-yellow-500 px-2 py-1 rounded text-sm" data-num="${num}">🔁 Transfer</button>
-    </td>`;
+    </td>`
+    ;
+
   viewLeadsTable.appendChild(tr);
 });
 
@@ -531,6 +584,150 @@
       localStorage.removeItem('currentTelecaller');
       window.location.href = 'index.html';
     });
+
+
+    document.querySelectorAll('.togglePending').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+
+    const id = e.target.dataset.id;
+
+    const refPending = ref(db, `Telecallers/${id}/ReceivePending`);
+
+    const snap = await get(refPending);
+
+    const current = snap.exists() ? snap.val() : false;
+
+    await set(refPending, !current);
+
+    alert("Receive Pending set to " + (!current));
+  });
+});
+
+document.getElementById("distributeBtn")
+.addEventListener("click",async ()=>{
+
+const choice = prompt(
+"Distribute which leads?\n\n1 → Today\n2 → All"
+);
+
+if(choice==="1"){
+await recycleNotPickedLeads("today");
+}
+
+else if(choice==="2"){
+await recycleNotPickedLeads("all");
+}
+
+else{
+alert("Cancelled");
+return;
+}
+
+alert("Leads distributed successfully");
+
+});
+
+
+async function recycleNotPickedLeads(mode){
+
+const teleRef=ref(db,"Telecallers");
+const snap=await get(teleRef);
+
+if(!snap.exists())return;
+
+const telecallers=snap.val();
+
+const activeReceivers=[];
+
+Object.entries(telecallers).forEach(([id,t])=>{
+if(t.ReceivePending===true){
+activeReceivers.push(id);
+}
+});
+
+let receiverIndex=0;
+
+for(const[id,t]of Object.entries(telecallers)){
+
+if(!t.NotPicked)continue;
+
+for(const[number,lead]of Object.entries(t.NotPicked)){
+
+  if(mode==="today"){
+
+const leadDate=new Date(lead.Time);
+const today=new Date();
+
+if(
+leadDate.getFullYear()!==today.getFullYear()||
+leadDate.getMonth()!==today.getMonth()||
+leadDate.getDate()!==today.getDate()
+){
+continue;
+}
+
+}
+
+const recycledCount = lead.recycledCount || 0;
+
+if (recycledCount >= 3) {
+  await remove(ref(db,
+  `Telecallers/${id}/NotPicked/${number}`));
+  continue;
+}
+
+const possibleReceivers=
+activeReceivers.filter(tid=>tid!==id);
+
+if(possibleReceivers.length===0)continue;
+
+const targetTelecaller=
+possibleReceivers[
+receiverIndex%possibleReceivers.length
+];
+
+await set(
+ref(db,
+`Telecallers/${targetTelecaller}/Pending/${number}`),
+{
+...lead,
+
+Status:"Pending",
+attempt:0,
+
+OriginalTelecallerId: lead.OriginalTelecallerId || id,
+OriginalTelecallerName: lead.OriginalTelecallerName || t.Name,
+
+RecycledFrom: id,
+RecycledFromName: t.Name,
+
+recycledCount:(lead.recycledCount || 0) + 1,
+
+RecycledAt:new Date().toISOString()
+}
+);
+
+await remove(ref(db,
+`Telecallers/${id}/NotPicked/${number}`));
+
+receiverIndex++;
+
+}
+
+}
+
+console.log("Lead recycling completed");
+
+}
+
+
+function checkMidnightRecycle(){
+  const now = new Date();
+  if(now.getHours()===0 && now.getMinutes()===0){
+    recycleNotPickedLeads("all");
+  }
+}
+setInterval(checkMidnightRecycle,60000);
 
     // ---------- End ----------
   </script>
