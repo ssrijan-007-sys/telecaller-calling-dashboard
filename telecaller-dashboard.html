@@ -411,6 +411,16 @@ if (attemptBtn) {
   const number = lead.number;
   const leadRef = ref(db, `Telecallers/${telecallerEmailKey}/Leads/${number}`);
 
+if (newStatus === "Picked") {
+
+  await update(leadRef, {
+    Status: "Picked"
+  });
+
+
+  return;
+}
+
 if (newStatus === "Not Picked") {
 
   e.target.value = lead.Status || "Not Called";
