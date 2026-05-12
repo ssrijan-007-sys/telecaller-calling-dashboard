@@ -788,7 +788,9 @@ setInterval(checkMidnightRecycle,60000);
 // ---------- SEARCH LEAD ----------
 searchBtn.addEventListener('click', async () => {
 
-  const number = searchNumber.value.trim();
+  const number = searchNumber.value
+    .trim()
+    .replace(/\s+/g, '');
 
   if (!number) {
     alert("Enter phone number");
@@ -806,71 +808,37 @@ searchBtn.addEventListener('click', async () => {
 
   let found = false;
 
+  // 🔥 NODES TO SEARCH
+  const nodesToSearch = [
+    "Leads",
+    "Followups",
+    "NotPicked",
+    "Ordered",
+    "Pending"
+  ];
+
   Object.entries(telecallers).forEach(([telecallerId, telecaller]) => {
 
-    // SEARCH IN LEADS
-    if (telecaller.Leads && telecaller.Leads[number]) {
+    nodesToSearch.forEach(nodeName => {
 
-      const lead = telecaller.Leads[number];
+      if (
+        telecaller[nodeName] &&
+        telecaller[nodeName][number]
+      ) {
 
-      showSearchResult(
-        lead,
-        number,
-        telecaller.Name || "Unknown",
-        "Leads"
-      );
+        const lead = telecaller[nodeName][number];
 
-      found = true;
-      return;
-    }
+        showSearchResult(
+          lead,
+          number,
+          telecaller.Name || "Unknown",
+          nodeName
+        );
 
-    // SEARCH IN PENDING
-    if (telecaller.Pending && telecaller.Pending[number]) {
+        found = true;
+      }
 
-      const lead = telecaller.Pending[number];
-
-      showSearchResult(
-        lead,
-        number,
-        telecaller.Name || "Unknown",
-        "Pending"
-      );
-
-      found = true;
-      return;
-    }
-
-    // SEARCH IN NOT PICKED
-    if (telecaller.NotPicked && telecaller.NotPicked[number]) {
-
-      const lead = telecaller.NotPicked[number];
-
-      showSearchResult(
-        lead,
-        number,
-        telecaller.Name || "Unknown",
-        "Not Picked"
-      );
-
-      found = true;
-      return;
-    }
-
-    // SEARCH IN ORDERED
-    if (telecaller.Ordered && telecaller.Ordered[number]) {
-
-      const lead = telecaller.Ordered[number];
-
-      showSearchResult(
-        lead,
-        number,
-        telecaller.Name || "Unknown",
-        "Ordered"
-      );
-
-      found = true;
-      return;
-    }
+    });
 
   });
 
@@ -884,6 +852,7 @@ searchBtn.addEventListener('click', async () => {
   }
 
 });
+
 
 function showSearchResult(lead, number, telecallerName, section) {
 
