@@ -254,7 +254,14 @@
 
               <input type="text" placeholder="Add a remark..." data-remark="${f.number}" class="w-full mt-2 bg-white/10 border border-white/30 rounded px-3 py-2 text-white placeholder-white/70 focus:outline-none focus:ring-1 focus:ring-blue-400" />
 
-              <div class="flex justify-end mt-2 gap-2">
+              <div class="flex justify-end mt-2 gap-2 flex-wrap">
+
+                <button
+                  data-details="${f.number}"
+                  data-name="${f.Name || 'Unknown'}"
+                  class="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm">
+                  Details
+                </button>
                 <button data-view="${f.number}" class="bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded text-sm">View</button>
                 <button data-extend="${f.number}" data-name="${f.Name || ''}" class="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-md">Extend follow-up</button>
                 <button data-remove="${f.number}" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm">Remove</button>
@@ -435,6 +442,305 @@ set(lastActiveRef, serverTimestamp());
 onDisconnect(statusRef).set(false);
 onDisconnect(lastActiveRef).set(serverTimestamp());
 
+
+
+// ================================
+// DETAILS MODAL
+// ================================
+
+const detailsModal = document.getElementById("detailsModal");
+
+const closeDetailsModal = document.getElementById("closeDetailsModal");
+
+const detailWeight = document.getElementById("detailWeight");
+const detailHeightFeet = document.getElementById("detailHeightFeet");
+const detailHeightInch = document.getElementById("detailHeightInch");
+
+const detailBMI = document.getElementById("detailBMI");
+const detailBMIStatus = document.getElementById("detailBMIStatus");
+
+const detailSugarInput = document.getElementById("detailSugar");
+
+const detailAge = document.getElementById("detailAge");
+
+const saveDetailsBtn = document.getElementById("saveDetailsBtn");
+
+const detailLeadName = document.getElementById("detailLeadName");
+const detailLeadNumber = document.getElementById("detailLeadNumber");
+
+let currentDetailLead = null;
+
+
+// ================================
+// BMI
+// ================================
+
+function calculateBMI() {
+
+  const weight = parseFloat(detailWeight.value);
+
+  const feet = parseFloat(detailHeightFeet.value) || 0;
+
+  const inches = parseFloat(detailHeightInch.value) || 0;
+
+  if (!weight || (!feet && !inches)) {
+    detailBMI.value = "";
+    detailBMIStatus.value = "";
+    return;
+  }
+
+  const totalInches = (feet * 12) + inches;
+
+  const heightMeters = totalInches * 0.0254;
+
+  const bmi = weight / (heightMeters * heightMeters);
+
+  detailBMI.value = bmi.toFixed(1);
+
+  if (bmi < 18.5) {
+    detailBMIStatus.value = "Underweight";
+  }
+  else if (bmi >= 18.5 && bmi < 25) {
+    detailBMIStatus.value = "Normal";
+  }
+  else {
+    detailBMIStatus.value = "Overweight";
+  }
+}
+
+detailWeight.addEventListener("input", calculateBMI);
+
+detailHeightFeet.addEventListener("input", calculateBMI);
+
+detailHeightInch.addEventListener("input", calculateBMI);
+
+
+// ================================
+// OPEN MODAL
+// ================================
+
+document.addEventListener("click", async (e) => {
+
+  const btn = e.target.closest("[data-details]");
+
+  if (!btn) return;
+
+  const number = btn.dataset.details;
+
+  const leadName = btn.dataset.name || "Unknown";
+
+  currentDetailLead = number;
+
+  detailLeadName.textContent = leadName;
+
+  detailLeadNumber.textContent = number;
+
+  // reset
+  detailAge.value = "";
+
+  detailWeight.value = "";
+
+  detailHeightFeet.value = "";
+
+  detailHeightInch.value = "";
+
+  detailBMI.value = "";
+
+  detailBMIStatus.value = "";
+
+  detailSugarInput.value = "";
+
+  try {
+
+    const detailsRef = ref(
+      db,
+      `Telecallers/${telecallerEmailKey}/Followups/${number}/Details`
+    );
+
+    const snap = await get(detailsRef);
+
+    if (snap.exists()) {
+
+      const data = snap.val();
+
+      detailAge.value = data.age || "";
+
+      detailWeight.value = data.weight || "";
+
+      detailHeightFeet.value = data.heightFeet || "";
+
+      detailHeightInch.value = data.heightInch || "";
+
+      detailBMI.value = data.bmi || "";
+
+      detailBMIStatus.value = data.bmiStatus || "";
+
+      detailSugarInput.value = data.currentSugar || "";
+    }
+
+    detailsModal.classList.remove("hidden");
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("Failed to load details");
+  }
+});
+
+
+// ================================
+// CLOSE
+// ================================
+
+closeDetailsModal.addEventListener("click", () => {
+  detailsModal.classList.add("hidden");
+});
+
+
+// ================================
+// SAVE
+// ================================
+
+saveDetailsBtn.addEventListener("click", async () => {
+
+  if (!currentDetailLead) return;
+
+  try {
+
+    const detailsRef = ref(
+      db,
+      `Telecallers/${telecallerEmailKey}/Followups/${currentDetailLead}/Details`
+    );
+
+    const saveData = {
+
+      age: detailAge.value || "",
+
+      weight: detailWeight.value || "",
+
+      heightFeet: detailHeightFeet.value || "",
+
+      heightInch: detailHeightInch.value || "",
+
+      bmi: detailBMI.value || "",
+
+      bmiStatus: detailBMIStatus.value || "",
+
+      currentSugar: detailSugarInput.value || "",
+
+      updatedAt: new Date().toISOString()
+    };
+
+    await set(detailsRef, saveData);
+
+    alert("✅ Details saved successfully");
+
+    detailsModal.classList.add("hidden");
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("❌ Failed to save details");
+  }
+});
+
   </script>
+
+
+<!-- Details Modal -->
+<div id="detailsModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+
+  <div class="bg-white text-black rounded-xl p-6 w-[95%] max-w-md relative max-h-[90vh] overflow-y-auto">
+
+    <button id="closeDetailsModal"
+      class="absolute top-2 right-3 text-2xl text-gray-500 hover:text-black">
+      &times;
+    </button>
+
+    <h2 class="text-2xl font-bold text-center text-blue-700">
+      Lead Details
+    </h2>
+
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mt-4 mb-5">
+      <p class="text-sm text-gray-600">Lead Name</p>
+      <p id="detailLeadName" class="font-bold text-lg text-gray-800">—</p>
+
+      <div class="mt-2">
+        <p class="text-sm text-gray-600">Phone Number</p>
+        <p id="detailLeadNumber" class="font-semibold text-blue-700">—</p>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+
+      <div>
+        <label class="block font-medium mb-1">Age</label>
+        <input type="number" id="detailAge"
+          class="w-full border rounded-lg px-3 py-2"
+          placeholder="Enter age">
+      </div>
+
+      <div>
+        <label class="block font-medium mb-1">Weight (kg)</label>
+        <input type="number" id="detailWeight"
+          class="w-full border rounded-lg px-3 py-2"
+          placeholder="Enter weight">
+      </div>
+
+      <div>
+        <label class="block font-medium mb-1">Height</label>
+
+        <div class="flex gap-2">
+
+          <input
+            type="number"
+            id="detailHeightFeet"
+            class="w-1/2 border rounded-lg px-3 py-2"
+            placeholder="Feet">
+
+          <input
+            type="number"
+            id="detailHeightInch"
+            class="w-1/2 border rounded-lg px-3 py-2"
+            placeholder="Inches">
+
+        </div>
+      </div>
+
+      <div>
+        <label class="block font-medium mb-1">BMI</label>
+        <input type="text" id="detailBMI"
+          class="w-full border rounded-lg px-3 py-2 bg-gray-100"
+          readonly>
+      </div>
+
+      <div>
+        <label class="block font-medium mb-1">BMI Status</label>
+        <input type="text" id="detailBMIStatus"
+          class="w-full border rounded-lg px-3 py-2 bg-gray-100"
+          readonly>
+      </div>
+
+      <div>
+        <label class="block font-medium mb-1">Current Sugar</label>
+        <input type="number" id="detailSugar"
+          class="w-full border rounded-lg px-3 py-2"
+          placeholder="Enter sugar level">
+      </div>
+
+      <button id="saveDetailsBtn"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold">
+        Save Details
+      </button>
+
+    </div>
+
+  </div>
+</div>
+
+
+
 </body>
 </html>
