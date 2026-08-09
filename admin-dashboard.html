@@ -803,6 +803,8 @@ searchBtn.addEventListener('click', async () => {
     </div>
   `;
 
+  
+
   searchModal.classList.remove('hidden');
   searchModal.classList.add('flex');
 
@@ -831,6 +833,7 @@ searchBtn.addEventListener('click', async () => {
         showSearchResult(
           lead,
           number,
+          telecallerId,
           telecaller.Name || "Unknown",
           nodeName
         );
@@ -854,7 +857,13 @@ searchBtn.addEventListener('click', async () => {
 });
 
 
-function showSearchResult(lead, number, telecallerName, section) {
+function showSearchResult(
+    lead,
+    number,
+    telecallerId,
+    telecallerName,
+    section
+) {
 
   let remarksHTML = '';
 
@@ -949,11 +958,43 @@ if (
         ${section}
       </div>
 
+      <div class="mt-4 flex justify-center">
+    <button
+        id="releadBtn"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg">
+        🔄 Send Relead
+    </button>
+</div>
+
       ${remarksHTML}
 
     </div>
 
   `;
+
+  const releadBtn = document.getElementById("releadBtn");
+
+releadBtn.addEventListener("click", async () => {
+
+    if (!confirm("Send this lead again?")) return;
+
+    await set(
+        ref(db, `Telecallers/${telecallerId}/${section}/${number}/Time`),
+        new Date().toLocaleString()
+    );
+
+    lead.Time = new Date().toLocaleString();
+
+    alert("Lead sent successfully.");
+
+    showSearchResult(
+        lead,
+        number,
+        telecallerId,
+        telecallerName,
+        section
+    );
+});
 }
 
 function formatRemarkTime(isoTime) {

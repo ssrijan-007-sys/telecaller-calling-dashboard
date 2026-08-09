@@ -889,27 +889,215 @@ function startInactivityWatcher() {
   }, 60000);
 }
 
+async function savePendingRemarks() {
+  const tasks = [];
+
+  document.querySelectorAll("[data-remark]").forEach(input => {
+    const text = input.value.trim();
+
+    if (!text) return;
+
+    const number = input.dataset.remark;
+
+    const remarkRef = ref(
+      db,
+      `Telecallers/${telecallerEmailKey}/Leads/${number}/Remarks`
+    );
+
+    tasks.push(
+      set(push(remarkRef), {
+        text: text,
+        time: new Date().toISOString(),
+        autoSaved: true
+      })
+    );
+  });
+
+  await Promise.all(tasks);
+
+  console.log("✅ Pending lead remarks auto-saved");
+}
+
+async function saveOpenDetails() {
+
+  // Details modal is not open
+  if (
+    detailsModal.classList.contains("hidden") ||
+    !currentDetailLead
+  ) {
+    return;
+  }
+
+  const detailsRef = ref(
+    db,
+    `Telecallers/${telecallerEmailKey}/Leads/${currentDetailLead}/Details`
+  );
+
+  const saveData = {
+    age: detailAge.value || "",
+    weight: detailWeight.value || "",
+    heightFeet: detailHeightFeet.value || "",
+    heightInch: detailHeightInch.value || "",
+    bmi: detailBMI.value || "",
+    bmiStatus: detailBMIStatus.value || "",
+    hba1c: detailHba1c.value || "",
+    cPeptide: detailCPeptide.value || "",
+    fastingSugar: detailFastingSugar.value || "",
+    nonFastingSugar: detailNonFastingSugar.value || "",
+
+    burningFeet: detailBurningFeet.checked,
+    blurVision: detailBlurVision.checked,
+    regularToilet: detailRegularToilet.checked,
+    english: detailEnglish.checked,
+
+    updatedAt: new Date().toISOString(),
+    autoSaved: true
+  };
+
+  // Save Details
+  await set(detailsRef, saveData);
+
+  // Save unfinished remark from Details modal
+  const remarkText = detailRemark.value.trim();
+
+  if (remarkText) {
+
+    const remarkRef = ref(
+      db,
+      `Telecallers/${telecallerEmailKey}/Leads/${currentDetailLead}/Remarks`
+    );
+
+    await set(
+      push(remarkRef),
+      {
+        text: remarkText,
+        time: new Date().toISOString(),
+        autoSaved: true
+      }
+    );
+  }
+
+  console.log(
+    `✅ Details modal auto-saved for ${currentDetailLead}`
+  );
+}
+
+async function saveOpenFollowup() {
+
+  if (
+    followupModal.classList.contains("hidden") ||
+    !selectedFollowup
+  ) {
+    return;
+  }
+
+  const followupDate = followupDateEl.value;
+  const followupTime = followupTimeEl.value;
+
+  // Nothing entered
+  if (!followupDate && !followupTime) {
+    return;
+  }
+
+  const number = selectedFollowup.number;
+
+  const leadRef = ref(
+    db,
+    `Telecallers/${telecallerEmailKey}/Leads/${number}`
+  );
+
+  const followupRef = ref(
+    db,
+    `Telecallers/${telecallerEmailKey}/Followups/${number}`
+  );
+
+  const snap = await get(leadRef);
+
+  const leadData = snap.exists()
+    ? snap.val()
+    : {
+        Name: selectedFollowup.name || "—",
+        number: number
+      };
+
+  // Save whatever has been entered
+  const followupData = {
+    ...leadData,
+    Name: leadData.Name || selectedFollowup.name || "—",
+    number: number,
+
+    "Follow-Up Date": followupDate || "",
+    "Follow-Up Time": followupTime || "",
+
+    Time: leadData.Time || new Date().toISOString(),
+
+    autoSaved: true,
+    autoSavedAt: new Date().toISOString()
+  };
+
+  await set(followupRef, followupData);
+
+  // Only remove original lead after successful save
+  await set(leadRef, null);
+
+  console.log(
+    `✅ Follow-up auto-saved for ${number}`
+  );
+}
+
+
 
 // 4️⃣ LOGOUT — using SDK set first then sendBeacon as fallback so it works on Android & laptop
 async function forceLogout() {
+
+  console.log("⛔ AUTO LOGOUT STARTED");
+  console.log("💾 Saving all pending work...");
+
   try {
-    const statusRef = ref(db, `Telecallers/${telecallerEmailKey}/Status`);
-    // Prefer SDK update (guaranteed while online)
+
+    // =========================================
+    // 1. SAVE NORMAL LEAD REMARKS
+    // =========================================
+    await savePendingRemarks();
+
+
+    // =========================================
+    // 2. SAVE DETAILS MODAL
+    // =========================================
+    await saveOpenDetails();
+
+
+    // =========================================
+    // 3. SAVE FOLLOW-UP MODAL
+    // =========================================
+    await saveOpenFollowup();
+
+
+    // =========================================
+    // 4. MARK TELECALLER OFFLINE
+    // =========================================
+    const statusRef = ref(
+      db,
+      `Telecallers/${telecallerEmailKey}/Status`
+    );
+
     await set(statusRef, false);
-    console.log("🔴 Logged out via SDK");
+
+    console.log("✅ All pending data saved");
+    console.log("🔴 Telecaller marked offline");
+
   } catch (err) {
-    console.warn("SDK logout failed, will try sendBeacon:", err);
-    try {
-      const url = `https://shreejeeayucare-df742.firebaseio.com/Telecallers/${telecallerEmailKey}/Status.json`;
-      const payload = JSON.stringify(false);
-      navigator.sendBeacon(url, payload);
-      console.log("🔴 Logged out via sendBeacon fallback");
-    } catch (e) {
-      console.error("Both logout methods failed:", e);
-    }
+
+    console.error(
+      "❌ AUTO LOGOUT SAVE ERROR:",
+      err
+    );
+
   } finally {
+
     localStorage.removeItem("currentTelecaller");
     sessionStorage.removeItem("telecallerEmailKey");
+
     window.location.href = "index.html";
   }
 }
